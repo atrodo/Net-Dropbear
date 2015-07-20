@@ -1,8 +1,8 @@
 package Net::Dropbear;
 
 use strict;
-use 5.008_005;
-our $VERSION = '0.01';
+use v5.12;
+our $VERSION = '0.1';
 
 1;
 __END__
@@ -31,8 +31,7 @@ Copyright 2015- Jon Gentle
 
 =head1 LICENSE
 
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
+This is free software. You may redistribute copies of it under the terms of the Artistic License 2 as published by The Perl Foundation.
 
 =head1 SEE ALSO
 

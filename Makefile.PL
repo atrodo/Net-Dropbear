@@ -7,44 +7,80 @@ use 5.008005;
 
 use ExtUtils::MakeMaker 6.30;
 
+my $db_src = 'dropbear/';
+my $db_bld = 'db_build/';
+eval { build_libmemcached() };
+if ($@)
+{
+  warn "Unable to build dropbear: $@\n";
+  warn "Aborted.\n";
+  exit 0;    # tell cpan testers that this is not a failure
+}
 
+my $objs = qx[make -f printvar.mak -f dropbear/Makefile print-dropbearobjs print-LIBTOM_LIBS];
+my $libs = qx[make -f printvar.mak -f dropbear/Makefile print-LIBS];
+
+$objs = join " ", map { "dropbear/$_" } split(/\s+/xms, $objs);
+$libs .= ' -lcrypt';
 
 my %WriteMakefileArgs = (
-  "ABSTRACT" => "Blah blah blah",
-  "AUTHOR" => "Jon Gentle <cpan\@atrodo.org>",
+  "ABSTRACT"           => "Blah blah blah",
+  "AUTHOR"             => "Jon Gentle <cpan\@atrodo.org>",
   "CONFIGURE_REQUIRES" => {
     "ExtUtils::MakeMaker" => "6.30"
   },
-  "DISTNAME" => "Net-Dropbear",
-  "EXE_FILES" => [],
-  "LICENSE" => "perl",
-  "NAME" => "Net::Dropbear",
-  "PREREQ_PM" => {},
+  "DISTNAME"      => "Net-Dropbear",
+  "EXE_FILES"     => [],
+  "LICENSE"       => "perl",
+  "NAME"          => "Net::Dropbear",
+  "PREREQ_PM"     => {},
   "TEST_REQUIRES" => {
     "Test::More" => "0.96"
   },
   "VERSION" => "0.01",
-  "test" => {
+  "test"    => {
     "TESTS" => "t/*.t"
-  }
+  },
+  INC => '-I. -Idropbear -Idropbear/libtomcrypt/src/headers',
+  #XS  => { 'Dropbear.xs' => 'XS.c' }
+  LDFROM           => '$(OBJECT)'." $objs",
+  LIBS => $libs,
 );
 
+my %FallbackPrereqs = ( "Test::More" => "0.96" );
 
-my %FallbackPrereqs = (
-  "Test::More" => "0.96"
-);
-
-
-unless ( eval { ExtUtils::MakeMaker->VERSION(6.63_03) } ) {
+unless ( eval { ExtUtils::MakeMaker->VERSION(6.63_03) } )
+{
   delete $WriteMakefileArgs{TEST_REQUIRES};
   delete $WriteMakefileArgs{BUILD_REQUIRES};
   $WriteMakefileArgs{PREREQ_PM} = \%FallbackPrereqs;
 }
 
 delete $WriteMakefileArgs{CONFIGURE_REQUIRES}
-  unless eval { ExtUtils::MakeMaker->VERSION(6.52) };
+    unless eval { ExtUtils::MakeMaker->VERSION(6.52) };
 
 WriteMakefile(%WriteMakefileArgs);
 
+sub run
+{
+  my ($cmd) = @_;
+  warn "$cmd\n";
+  my $ret = system($cmd);
+  die "Error running $cmd ($!)\n"
+    unless $ret == 0;
+}
 
+sub build_libmemcached
+{
+  local $ENV{DESTDIR};    # do not let Perl module config leak through
+
+  return
+    if -e "$db_src/dropbear";
+
+  run("cd $db_src && make distclean")
+    if -f "$db_src/Makefile";
+
+  run("cd $db_src && ./configure");
+  run("cd $db_src && make");
+}
 

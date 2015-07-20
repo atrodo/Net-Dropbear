@@ -1,7 +1,11 @@
-requires 'perl', '5.008005';
+requires 'perl', '5.012000';
 
-# requires 'Some::Module', 'VERSION';
+requires 'Moo', '2.000';
+requires 'Types::Standard';
+requires 'Child';
 
 on test => sub {
-    requires 'Test::More', '0.96';
+  requires 'Test::More', '0.96';
+  requires 'Net::OpenSSH';
+  requires 'Net::SFTP::Foreign';
 };

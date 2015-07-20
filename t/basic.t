@@ -1,8 +1,8 @@
 use strict;
 use Test::More;
-use Net::Dropbear;
 
 # replace with the actual test
-ok 1;
+use_ok('Net::Dropbear', 'Can use Dropbear');
+use_ok('Net::Dropbear::SSHd', 'Can use Dropbear SSHd');
 
 done_testing;
