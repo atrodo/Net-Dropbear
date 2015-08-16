@@ -1,0 +1,27 @@
+enum signkey_type                               T_ENUM
+svr_runopts					T_OPAQUE_STRUCT
+svr_runopts *					T_PTROBJ
+dropbear__xs					T_OPAQUE_STRUCT
+dropbear__xs *					T_PTROBJ
+sign_key *                                      T_PTROBJ
+
+Net_Dropbear_XS                                 T_OPAQUE_STRUCT
+Net_Dropbear_XS *                               T_PTROBJ
+#############################################################################
+INPUT
+T_OPAQUE_STRUCT
+        if (sv_derived_from($arg, \"${ntype}\")) {
+            STRLEN len;
+            char  *s = SvPV((SV*)SvRV($arg), len);
+
+            if (len != sizeof($var))
+                croak(\"Size %d of packed data != expected %d\",
+                        len, sizeof($var));
+            $var = *($type *)s;
+        }
+        else
+            croak(\"$var is not of type ${ntype}\")
+#############################################################################
+OUTPUT
+T_OPAQUE_STRUCT
+        sv_setref_pvn($arg, \"${ntype}\", (char *)&$var, sizeof($var));
