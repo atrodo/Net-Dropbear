@@ -1,4 +1,4 @@
-package Net::Dropbear;
+package Net::Dropbear::SSH;
 
 use strict;
 use v5.12;
@@ -11,17 +11,19 @@ __END__
 
 =head1 NAME
 
-Net::Dropbear - Use Dropbear SSH inside of perl
+Net::Dropbear - Embed and control a Dropbear SSH client inside of perl (Not implemented yet)
 
 =head1 DESCRIPTION
 
-This is a container package. You want one of the sub packages:
+This module is not implemented yet.
+
+=head1 SEE ALSO
 
 =over
 
 =item L<Net::Dropbear::SSHd> - Embed and control a Dropbear SSH server inside of perl
 
-=item L<Net::Dropbear::SSH> - Embed and control a Dropbear SSH client inside of perl (Not implemented yet)
+=item L<Net::OpenSSH>
 
 =back
 

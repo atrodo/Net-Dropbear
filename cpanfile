@@ -1,6 +1,7 @@
 requires 'perl', '5.012000';
 
 requires 'Moo', '2.000';
+requires 'Try::Tiny';
 requires 'Types::Standard';
 requires 'Child';
 

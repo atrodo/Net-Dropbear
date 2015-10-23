@@ -4,45 +4,34 @@ use File::Temp ();
 
 use Net::Dropbear::SSHd;
 use Net::Dropbear::XS;
-use Net::OpenSSH;
+use IPC::Open3;
+use IO::Pty;
+use Try::Tiny;
 
-my $port = int(rand(10000) + 1024);
-my $key_fh = File::Temp->new( template => "net_dropbear_sshd_XXXXXXXX" );
-my $key_filename = $key_fh->filename;
-undef $key_fh;
+use FindBin;
+require "$FindBin::Bin/Helper.pm";
 
-Net::Dropbear::XS::gen_key($key_filename);
+our $port;
+our $key_fh;
+our $key_filename;
+our $sshd;
+our $planned;
 
-END { unlink $key_filename };
+use POSIX qw/WNOHANG/;
 
 my $sshd = Net::Dropbear::SSHd->new(
-  addrs => $port,
-  allowblankpass => 1,
-  noauthpass => 0,
-  keys => $key_filename,
-  hooks => {
-    on_username => sub { return 0; },
-    on_shadow_fill => sub { $_[0] = crypt('', 'aa'); return 0; },
-  },
+  addrs          => $port,
+  noauthpass     => 0,
+  keys           => $key_filename,
 );
 
 $sshd->run;
 
-diag("OpenSSH");
-my $ssh = Net::OpenSSH->new("localhost:$port", password => '', user  => $port, master_opts => [ -o => "UserKnownHostsFile /dev/null", -o => "StrictHostKeyChecking no", '-v' ]);
+cmp_ok( waitpid( $sshd->child->pid, WNOHANG ), '>=', 0, 'SSHd started' );
 
-diag("OpenSSH Back");
-#diag(Data::Dumper::Dumper($ssh));
-
-is($ssh->check_master, 1, 'Able to connect to Dropbear');
-isnt($ssh->error, undef, 'Connected to Dropbear without error');
-
-diag("Cleanup: kill");
 $sshd->kill;
-
-diag("Cleanup: wait");
 $sshd->wait;
 
-ok 1;
+cmp_ok( waitpid( $sshd->child->pid, WNOHANG ), '<', 0, 'SSHd stopped' );
 
-done_testing;
+done_testing($planned);

@@ -15,8 +15,8 @@
 #include "crypto_desc.h"
 #include "libdropbear.h"
 
-typedef void * dropbear__xs;
-typedef void * Net_Dropbear_XS;
+typedef struct dropbear_chansess_accept * Net__Dropbear__XS__SessionAccept;
+typedef struct AuthState * Net__Dropbear__XS__AuthState;
 
 int _get_bool(SV *self, char *method)
 {
@@ -36,7 +36,7 @@ int _get_bool(SV *self, char *method)
 	SPAGAIN;
 
 	if (count != 1)
-	  croak(Perl_form("Too much result from %s\n", method));
+	  croak("Too much result from %s\n", method);
 
 	option = POPs;
 	result = SvTRUE(option);
@@ -84,7 +84,7 @@ int hooks_on(const char *hook, AV* args)
     if (SvTRUE(ERRSV))
     {
         dropbear_log(LOG_DEBUG, "Error calling %s: %s\n", hook, SvPV_nolen(ERRSV));
-        RETVAL = DROPBEAR_FAILURE;
+        RETVAL = LIBDROPBEAR_HOOK_FAILURE;
     }
     else
     {
@@ -92,6 +92,38 @@ int hooks_on(const char *hook, AV* args)
     }
 
     PUTBACK;
+    FREETMPS;
+    LEAVE;
+
+    return RETVAL;
+}
+
+int hooks_on_log(int priority, const char *message)
+{
+    ENTER;
+    SAVETMPS;
+
+    AV* args = newAV();
+
+    av_push(args, sv_2mortal(newSViv(priority)));
+    av_push(args, sv_2mortal(newSVpv(message, 0)));
+    int RETVAL = hooks_on("on_log", args);
+
+    FREETMPS;
+    LEAVE;
+
+    return RETVAL;
+}
+
+int hooks_on_start()
+{
+    ENTER;
+    SAVETMPS;
+
+    AV* args = newAV();
+
+    int RETVAL = hooks_on("on_start", args);
+
     FREETMPS;
     LEAVE;
 
@@ -114,14 +146,17 @@ int hooks_on_username(const char* username)
     return RETVAL;
 }
 
-int hooks_on_passwd_fill(struct AuthState auth)
+int hooks_on_passwd_fill(struct AuthState *auth, const char *username)
 {
     ENTER;
     SAVETMPS;
 
     AV* args = newAV();
 
-//    av_push(args, sv_2mortal(newSVpv(auth, 0)));
+    SV *auth_obj = newSV(0);
+    auth_obj = sv_setref_pv(auth_obj, "Net::Dropbear::XS::AuthState", auth);
+    av_push(args, sv_2mortal(auth_obj));
+    av_push(args, sv_2mortal(newSVpv(username, 0)));
     int RETVAL = hooks_on("on_passwd_fill", args);
 
     FREETMPS;
@@ -130,7 +165,7 @@ int hooks_on_passwd_fill(struct AuthState auth)
     return RETVAL;
 }
 
-int hooks_on_shadow_fill(char** crypt_password)
+int hooks_on_shadow_fill(char** crypt_password, const char *pw_name)
 {
     ENTER;
     SAVETMPS;
@@ -138,19 +173,74 @@ int hooks_on_shadow_fill(char** crypt_password)
     AV* args = newAV();
 
     av_push(args, sv_2mortal(newSVpv("", 0)));
+    av_push(args, sv_2mortal(newSVpv(pw_name, 0)));
     int RETVAL = hooks_on("on_shadow_fill", args);
 
     SV** arg = av_fetch(args, 0, 0);
     if ( arg != NULL )
     {
       *crypt_password = m_strdup(SvPV_nolen(*arg));
-      warn("1 %s\n", SvPV_nolen(*arg));
-      warn("2 %s\n", *crypt_password);
     }
 
     FREETMPS;
     LEAVE;
-      warn("3 %s\n", *crypt_password);
+
+    return RETVAL;
+}
+
+int hooks_on_check_pubkey(char** authkeys, const char *pw_name)
+{
+    ENTER;
+    SAVETMPS;
+
+    AV* args = newAV();
+
+    av_push(args, sv_2mortal(newSVpv("", 0)));
+    av_push(args, sv_2mortal(newSVpv(pw_name, 0)));
+    int RETVAL = hooks_on("on_check_pubkey", args);
+
+    SV** arg = av_fetch(args, 0, 0);
+    if ( arg != NULL )
+    {
+      *authkeys = m_strdup(SvPV_nolen(*arg));
+    }
+
+    FREETMPS;
+    LEAVE;
+
+    return RETVAL;
+}
+
+int hooks_on_new_channel(const char* type)
+{
+    ENTER;
+    SAVETMPS;
+
+    AV* args = newAV();
+
+    av_push(args, sv_2mortal(newSVpv(type, 0)));
+    int RETVAL = hooks_on("on_new_channel", args);
+
+    FREETMPS;
+    LEAVE;
+
+    return RETVAL;
+}
+
+int hooks_on_chansess_command(struct dropbear_chansess_accept *chansess)
+{
+    ENTER;
+    SAVETMPS;
+
+    AV* args = newAV();
+
+    SV *session_accept = newSV(0);
+    session_accept = sv_setref_pv(session_accept, "Net::Dropbear::XS::SessionAccept", chansess);
+    av_push(args, sv_2mortal(session_accept));
+    int RETVAL = hooks_on("on_chansess_command", args);
+
+    FREETMPS;
+    LEAVE;
 
     return RETVAL;
 }
@@ -161,8 +251,9 @@ BOOT:
 {
     HV *stash = gv_stashpv("Net::Dropbear::XS", 0);
 
-    newCONSTSUB(stash, "DROPBEAR_SUCCESS", newSViv (DROPBEAR_SUCCESS));
-    newCONSTSUB(stash, "DROPBEAR_FAILURE", newSViv (DROPBEAR_FAILURE));
+    newCONSTSUB(stash, "HOOK_COMPLETE", newSViv (LIBDROPBEAR_HOOK_COMPLETE));
+    newCONSTSUB(stash, "HOOK_CONTINUE", newSViv (LIBDROPBEAR_HOOK_CONTINUE));
+    newCONSTSUB(stash, "HOOK_FAILURE",  newSViv (LIBDROPBEAR_HOOK_FAILURE));
 }
 
 void
@@ -185,6 +276,7 @@ setup_svr_opts(CLASS, ref)
     PROTOTYPE: $$
     CODE:
 	dropbear_init();
+        debug_trace             = _get_bool(ref, "debug");
         svr_opts.forkbg         = _get_bool(ref, "forkbg");
 	svr_opts.usingsyslog    = _get_bool(ref, "usingsyslog");
 	svr_opts.inetdmode      = _get_bool(ref, "inetdmode");
@@ -204,9 +296,14 @@ setup_svr_opts(CLASS, ref)
 #endif
 
         hooks_self = ref;
+        hooks.on_log = hooks_on_log;
+        hooks.on_start = hooks_on_start;
         hooks.on_username = hooks_on_username;
         hooks.on_passwd_fill = hooks_on_passwd_fill;
         hooks.on_shadow_fill = hooks_on_shadow_fill;
+        hooks.on_check_pubkey = hooks_on_check_pubkey;
+        hooks.on_new_channel = hooks_on_new_channel;
+        hooks.on_chansess_command = hooks_on_chansess_command;
 
         int count, i;
         SSize_t len;
@@ -218,13 +315,11 @@ setup_svr_opts(CLASS, ref)
         PUSHMARK(SP);
         XPUSHs(ref);
         PUTBACK;
-        warn("+++\n");
         count = call_method("addrs", G_SCALAR);
-        warn("---\n");
         SPAGAIN;
 
         if (count != 1)
-          croak(Perl_form("Too much result from %s\n", "addr"));
+          croak("Too much result from %s\n", "addr");
 
         ref_result = POPs;
 
@@ -241,7 +336,6 @@ setup_svr_opts(CLASS, ref)
           SV** addr = av_fetch(addrs, i, 0);
           if ( addr != NULL )
           {
-            warn("%s\n", SvPV_nolen(*addr));
             dropbear_add_svr_addr(SvPV_nolen(*addr));
           }
         }
@@ -253,7 +347,7 @@ setup_svr_opts(CLASS, ref)
 	SPAGAIN;
 
 	if (count != 1)
-	  croak(Perl_form("Too much result from %s\n", "addr"));
+	  croak("Too much result from %s\n", "keys");
 
 	ref_result = POPs;
 
@@ -270,7 +364,6 @@ setup_svr_opts(CLASS, ref)
           SV** key = av_fetch(svr_keys, i, 0);
           if ( key != NULL )
           {
-            warn("%s\n", SvPV_nolen(*key));
             dropbear_add_svr_key(SvPV_nolen(*key));
           }
         }
@@ -278,254 +371,232 @@ setup_svr_opts(CLASS, ref)
 	FREETMPS;
 	LEAVE;
 
+MODULE = Net::Dropbear	PACKAGE = Net::Dropbear::XS::AuthState
 
-Net_Dropbear_XS *
-new(CLASS)
-        char *CLASS = NO_INIT
-    PROTOTYPE: $
+BOOT:
+{
+    HV *stash = gv_stashpv("Net::Dropbear::XS::AuthState", 0);
+
+    newCONSTSUB(stash, "AUTH_TYPE_NONE",      newSViv (AUTH_TYPE_NONE));
+    newCONSTSUB(stash, "AUTH_TYPE_PUBKEY",    newSViv (AUTH_TYPE_PUBKEY));
+    newCONSTSUB(stash, "AUTH_TYPE_PASSWORD",  newSViv (AUTH_TYPE_PASSWORD));
+    newCONSTSUB(stash, "AUTH_TYPE_INTERACT",  newSViv (AUTH_TYPE_INTERACT));
+}
+
+unsigned char
+authtypes(THIS, __value = NO_INIT)
+        Net::Dropbear::XS::AuthState THIS
+        unsigned char __value
+    PROTOTYPE: $;$
     CODE:
-	Newxz(RETVAL, 1, Net_Dropbear_XS);
+        if (items > 1)
+            THIS->authtypes = __value;
+        RETVAL = THIS->authtypes;
     OUTPUT:
         RETVAL
-
-MODULE = Net::Dropbear	PACKAGE = Net_Dropbear_XSPtr
-
-char *
-bannerfile(THIS, __value = NO_INIT)
-	Net_Dropbear_XS * THIS
-	char * __value
-    PROTOTYPE: $;$
-    CODE:
-	if (items > 1)
-	    svr_opts.bannerfile = __value;
-	RETVAL = svr_opts.bannerfile;
-    OUTPUT:
-	RETVAL
-
-int
-forkbg(THIS, __value = NO_INIT)
-	Net_Dropbear_XS * THIS
-	int __value
-    PROTOTYPE: $;$
-    CODE:
-	if (items > 1)
-	    svr_opts.forkbg = __value ? 1 : 0;
-	RETVAL = svr_opts.forkbg;
-    OUTPUT:
-	RETVAL
-
-int
-usingsyslog(THIS, __value = NO_INIT)
-	Net_Dropbear_XS * THIS
-	int __value
-    PROTOTYPE: $;$
-    CODE:
-	if (items > 1)
-	    svr_opts.usingsyslog = __value ? 1 : 0;
-	RETVAL = svr_opts.usingsyslog;
-    OUTPUT:
-	RETVAL
-
-=c
-
-char *
-ports(THIS, __value = NO_INIT)
-	Net_Dropbear_XS * THIS
-	char * __value
-    PROTOTYPE: $;$
-    CODE:
-	if (items > 1)
-	    svr_opts.ports = __value;
-	RETVAL = svr_opts.ports;
-    OUTPUT:
-	RETVAL
-
+ 
 unsigned int
-portcount(THIS, __value = NO_INIT)
-	Net_Dropbear_XS * THIS
-	unsigned int __value
+failcount(THIS, __value = NO_INIT)
+        Net::Dropbear::XS::AuthState THIS
+        unsigned int __value
     PROTOTYPE: $;$
     CODE:
-	if (items > 1)
-	    svr_opts.portcount = __value;
-	RETVAL = svr_opts.portcount;
+        if (items > 1)
+            THIS->failcount = __value;
+        RETVAL = THIS->failcount;
     OUTPUT:
-	RETVAL
-
+        RETVAL
+ 
+unsigned
+authdone(THIS, __value = NO_INIT)
+        Net::Dropbear::XS::AuthState THIS
+        unsigned __value
+    PROTOTYPE: $;$
+    CODE:
+        if (items > 1)
+            THIS->authdone = __value;
+        RETVAL = THIS->authdone;
+    OUTPUT:
+        RETVAL
+ 
+unsigned
+perm_warn(THIS, __value = NO_INIT)
+        Net::Dropbear::XS::AuthState THIS
+        unsigned __value
+    PROTOTYPE: $;$
+    CODE:
+        if (items > 1)
+            THIS->perm_warn = __value;
+        RETVAL = THIS->perm_warn;
+    OUTPUT:
+        RETVAL
+ 
+uid_t
+pw_uid(THIS, __value = NO_INIT)
+        Net::Dropbear::XS::AuthState THIS
+        uid_t __value
+    PROTOTYPE: $;$
+    CODE:
+        if (items > 1)
+            THIS->pw_uid = __value;
+        RETVAL = THIS->pw_uid;
+    OUTPUT:
+        RETVAL
+ 
+gid_t
+pw_gid(THIS, __value = NO_INIT)
+        Net::Dropbear::XS::AuthState THIS
+        gid_t __value
+    PROTOTYPE: $;$
+    CODE:
+        if (items > 1)
+            THIS->pw_gid = __value;
+        RETVAL = THIS->pw_gid;
+    OUTPUT:
+        RETVAL
+ 
 char *
-addresses(THIS, __value = NO_INIT)
-	Net_Dropbear_XS * THIS
-	char * __value
+pw_dir(THIS, __value = NO_INIT)
+        Net::Dropbear::XS::AuthState THIS
+        char * __value
     PROTOTYPE: $;$
     CODE:
-	if (items > 1)
-	    svr_opts.addresses = __value;
-	RETVAL = svr_opts.addresses;
+        if (items > 1)
+            THIS->pw_dir = __value;
+        RETVAL = THIS->pw_dir;
     OUTPUT:
-	RETVAL
-
-=cut
-
-int
-inetdmode(THIS, __value = NO_INIT)
-	Net_Dropbear_XS * THIS
-	int __value
-    PROTOTYPE: $;$
-    CODE:
-	if (items > 1)
-	    svr_opts.inetdmode = __value ? 1 : 0;
-	RETVAL = svr_opts.inetdmode;
-    OUTPUT:
-	RETVAL
-
-
-int
-domotd(THIS, __value = NO_INIT)
-	Net_Dropbear_XS * THIS
-	int __value
-    PROTOTYPE: $;$
-    CODE:
-#ifdef DO_MOTD
-	if (items > 1)
-	    svr_opts.domotd = __value ? 1 : 0;
-	RETVAL = svr_opts.domotd;
-#endif
-    OUTPUT:
-	RETVAL
-
-
-int
-norootlogin(THIS, __value = NO_INIT)
-	Net_Dropbear_XS * THIS
-	int __value
-    PROTOTYPE: $;$
-    CODE:
-	if (items > 1)
-	    svr_opts.norootlogin = __value ? 1 : 0;
-	RETVAL = svr_opts.norootlogin;
-    OUTPUT:
-	RETVAL
-
-int
-noauthpass(THIS, __value = NO_INIT)
-	Net_Dropbear_XS * THIS
-	int __value
-    PROTOTYPE: $;$
-    CODE:
-	if (items > 1)
-	    svr_opts.noauthpass = __value ? 1 : 0;
-	RETVAL = svr_opts.noauthpass;
-    OUTPUT:
-	RETVAL
-
-int
-norootpass(THIS, __value = NO_INIT)
-	Net_Dropbear_XS * THIS
-	int __value
-    PROTOTYPE: $;$
-    CODE:
-	if (items > 1)
-	    svr_opts.norootpass = __value ? 1 : 0;
-	RETVAL = svr_opts.norootpass;
-    OUTPUT:
-	RETVAL
-
-int
-allowblankpass(THIS, __value = NO_INIT)
-	Net_Dropbear_XS * THIS
-	int __value
-    PROTOTYPE: $;$
-    CODE:
-	if (items > 1)
-	    svr_opts.allowblankpass = __value ? 1 : 0;
-	RETVAL = svr_opts.allowblankpass;
-    OUTPUT:
-	RETVAL
-
-
-int
-noremotetcp(THIS, __value = NO_INIT)
-	Net_Dropbear_XS * THIS
-	int __value
-    PROTOTYPE: $;$
-    CODE:
-#ifdef ENABLE_SVR_REMOTETCPFWD
-	if (items > 1)
-	    svr_opts.noremotetcp = __value ? 1 : 0;
-	RETVAL = svr_opts.noremotetcp;
-#endif
-    OUTPUT:
-	RETVAL
-
-
-
-int
-nolocaltcp(THIS, __value = NO_INIT)
-	Net_Dropbear_XS * THIS
-	int __value
-    PROTOTYPE: $;$
-    CODE:
-#ifdef ENABLE_SVR_LOCALTCPFWD
-	if (items > 1)
-	    svr_opts.nolocaltcp = __value ? 1 : 0;
-	RETVAL = svr_opts.nolocaltcp;
-#endif
-    OUTPUT:
-	RETVAL
-
-
-=c
-
-sign_key *
-hostkey(THIS, __value = NO_INIT)
-	Net_Dropbear_XS * THIS
-	sign_key * __value
-    PROTOTYPE: $;$
-    CODE:
-	if (items > 1)
-	    svr_opts.hostkey = __value;
-	RETVAL = svr_opts.hostkey;
-    OUTPUT:
-	RETVAL
-
-=cut
-
-int
-delay_hostkey(THIS, __value = NO_INIT)
-	Net_Dropbear_XS * THIS
-	int __value
-    PROTOTYPE: $;$
-    CODE:
-	if (items > 1)
-	    svr_opts.delay_hostkey = __value ? 1 : 0;
-	RETVAL = svr_opts.delay_hostkey;
-    OUTPUT:
-	RETVAL
-
-=c
-
+        RETVAL
+ 
 char *
-hostkey_files(THIS, __value = NO_INIT)
-	Net_Dropbear_XS * THIS
-	char * __value
+pw_shell(THIS, __value = NO_INIT)
+        Net::Dropbear::XS::AuthState THIS
+        char * __value
     PROTOTYPE: $;$
     CODE:
-	if (items > 1)
-	    svr_opts.hostkey_files = __value;
-	RETVAL = svr_opts.hostkey_files;
+        if (items > 1)
+            THIS->pw_shell = __value;
+        RETVAL = THIS->pw_shell;
     OUTPUT:
-	RETVAL
+        RETVAL
+ 
+char *
+pw_name(THIS, __value = NO_INIT)
+        Net::Dropbear::XS::AuthState THIS
+        char * __value
+    PROTOTYPE: $;$
+    CODE:
+        if (items > 1)
+            THIS->pw_name = __value;
+        RETVAL = THIS->pw_name;
+    OUTPUT:
+        RETVAL
+ 
+char *
+pw_passwd(THIS, __value = NO_INIT)
+        Net::Dropbear::XS::AuthState THIS
+        char * __value
+    PROTOTYPE: $;$
+    CODE:
+        if (items > 1)
+            THIS->pw_passwd = __value;
+        RETVAL = THIS->pw_passwd;
+    OUTPUT:
+        RETVAL
+ 
+MODULE = Net::Dropbear	PACKAGE = Net::Dropbear::XS::SessionAccept
 
 int
-num_hostkey_files(THIS, __value = NO_INIT)
-	Net_Dropbear_XS * THIS
-	int __value
+channel_index(THIS, __value = NO_INIT)
+        Net::Dropbear::XS::SessionAccept THIS
+        int __value
     PROTOTYPE: $;$
     CODE:
-	if (items > 1)
-	    svr_opts.num_hostkey_files = __value;
-	RETVAL = svr_opts.num_hostkey_files;
+        if (items > 1)
+            THIS->channel_index = __value;
+        RETVAL = THIS->channel_index;
     OUTPUT:
-	RETVAL
-
-=cut
+        RETVAL
+ 
+char *
+cmd(THIS, __value = NO_INIT)
+        Net::Dropbear::XS::SessionAccept THIS
+        char * __value
+    PROTOTYPE: $;$
+    CODE:
+        if (items > 1)
+            THIS->cmd = m_strdup(__value);
+        RETVAL = THIS->cmd;
+    OUTPUT:
+        RETVAL
+ 
+pid_t
+pid(THIS, __value = NO_INIT)
+        Net::Dropbear::XS::SessionAccept THIS
+        pid_t __value
+    PROTOTYPE: $;$
+    CODE:
+        if (items > 1)
+            THIS->pid = __value;
+        RETVAL = THIS->pid;
+    OUTPUT:
+        RETVAL
+ 
+int
+iscmd(THIS, __value = NO_INIT)
+        Net::Dropbear::XS::SessionAccept THIS
+        int __value
+    PROTOTYPE: $;$
+    CODE:
+        if (items > 1)
+            THIS->iscmd = __value;
+        RETVAL = THIS->iscmd;
+    OUTPUT:
+        RETVAL
+ 
+int
+issubsys(THIS, __value = NO_INIT)
+        Net::Dropbear::XS::SessionAccept THIS
+        int __value
+    PROTOTYPE: $;$
+    CODE:
+        if (items > 1)
+            THIS->issubsys = __value;
+        RETVAL = THIS->issubsys;
+    OUTPUT:
+        RETVAL
+ 
+int
+writefd(THIS, __value = NO_INIT)
+        Net::Dropbear::XS::SessionAccept THIS
+        int __value
+    PROTOTYPE: $;$
+    CODE:
+        if (items > 1)
+            THIS->writefd = __value;
+        RETVAL = THIS->writefd;
+    OUTPUT:
+        RETVAL
+ 
+int
+readfd(THIS, __value = NO_INIT)
+        Net::Dropbear::XS::SessionAccept THIS
+        int __value
+    PROTOTYPE: $;$
+    CODE:
+        if (items > 1)
+            THIS->readfd = __value;
+        RETVAL = THIS->readfd;
+    OUTPUT:
+        RETVAL
+ 
+int
+errfd(THIS, __value = NO_INIT)
+        Net::Dropbear::XS::SessionAccept THIS
+        int __value
+    PROTOTYPE: $;$
+    CODE:
+        if (items > 1)
+            THIS->errfd = __value;
+        RETVAL = THIS->errfd;
+    OUTPUT:
+        RETVAL

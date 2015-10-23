@@ -6,9 +6,10 @@ our $VERSION = '0.1';
 
 use Child;
 
+use autodie;
 use Carp;
 use Moo;
-use Types::Standard qw/ArrayRef HashRef Str Int Bool InstanceOf/;
+use Types::Standard qw/ArrayRef HashRef GlobRef Str Int Bool InstanceOf/;
 
 has addrs => (
   is => 'rw',
@@ -31,6 +32,7 @@ has keys => (
   },
 );
 
+has debug          => ( is => "rw", isa => Bool, default => 0, );
 has forkbg         => ( is => "rw", isa => Bool, default => 0, );
 has usingsyslog    => ( is => "rw", isa => Bool, default => 0, );
 has inetdmode      => ( is => "rw", isa => Bool, default => 0, );
@@ -54,6 +56,11 @@ has child => (
   isa => InstanceOf['Child::Link::Proc'],
 );
 
+has comm => (
+  is => 'rwp',
+  isa => GlobRef,
+);
+
 sub is_running
 {
   my $self = shift;
@@ -63,19 +70,42 @@ sub is_running
 sub run
 {
   my $self = shift;
+  my $child_hook = shift;
+
+  if (defined $child_hook && ref $child_hook ne 'CODE')
+  {
+    croak '$child_hook was not a code ref when calling run';
+  }
+
+  use Socket;
+  use IO::Handle;
+  socketpair(my $child_comm, my $parent_comm, AF_UNIX, SOCK_STREAM, PF_UNSPEC);
 
   my $child = Child->new(sub {
     my $parent = shift;
     $0 .= " [Net::Dropbear Child]";
-    use Data::Dumper;
+
+    $parent_comm->close;
+    $self->_set_comm($child_comm);
+
     require Net::Dropbear::XS;
-    warn Data::Dumper::Dumper($self);
-    my $a = Net::Dropbear::XS->setup_svr_opts($self);
-    warn Data::Dumper::Dumper($a);
-    #Net::Dropbear::XS::addportandaddress($self->port);
+
+    Net::Dropbear::XS->setup_svr_opts($self);
+
+    $child_hook->($parent)
+      if defined $child_hook;
+
     Net::Dropbear::XS->svr_main();
+
+    # Should never return
+    croak 'Unexpected return from dropbear';
   });
+
   $self->child($child->start);
+  $child_comm->close;
+  $self->_set_comm($parent_comm);
+
+  return;
 }
 
 sub kill
@@ -101,15 +131,14 @@ sub auto_hook
   my $self = shift;
   my $hook = shift;
 
-    warn "Calling hook $self, $hook\n";
   if (exists $self->hooks->{$hook})
   {
-    warn "Calling hook $hook\n";
     return $self->hooks->{$hook}->(@_);
   }
 
-  return Net::Dropbear::XS::DROPBEAR_FAILURE();
+  return Net::Dropbear::XS::HOOK_CONTINUE();
 }
+
 
 1;
 __END__
@@ -118,19 +147,144 @@ __END__
 
 =head1 NAME
 
-Net::Dropbear - Blah blah blah
+Net::Dropbear::SSHd - Embed and control a Dropbear SSH server inside of perl
 
 =head1 SYNOPSIS
 
-  use Net::Dropbear;
+  use Net::Dropbear::SSHd;
+  
+  Net::Dropbear::XS::gen_key($key_filename);
+  
+  my $sshd = Net::Dropbear::SSHd->new(
+    addrs      => '2222',
+    keys       => $key_filename,
+    hooks      => {
+      on_log => sub
+      {
+        my $priority = shift;
+        my $msg      = shift;
+        warn( "$msg\n" );
+        return HOOK_CONTINUE;
+      },
+    }
+  );
+  
+  $sshd->run;
+  $sshd->wait;
 
 =head1 DESCRIPTION
 
-Net::Dropbear is
+Net::Dropbear::SSHd allows you to embed and control an SSH server (using Dropbear) from perl.
+
+=head2 Motivation
+
+Maybe you're asking yourself why you'd want to do that? Imagine that you want
+to run a service where you let users run remote commands over SSH, say SFTP
+or git. Also imagine that you'd like maintain the users or public keys in a
+database instead of in a file.  A good example of this behavior would be
+Github and other cloud-based git-over-ssh solutions.
+
+I'm pretty confident that one could get OpenSSH to do this, but I saw a couple
+problems:
+
+=over
+
+=item The user must be a real user
+
+Any user that wants to connect must be a real user at the OS level. Managing
+multiple users, let alone millions, is a nightmare.
+
+=item OpenSSH really likes running as root
+
+Until recently, running as non-root was even possible. It's now possible,
+but a lot of interesting features are restricted.
+
+=item Authorized keys can be provided through a script owned by root
+
+A continuation of the point above, but in order to enable OpenSSH to verify
+a key, a script can be provided. This script (and all directories leading
+to the script) must be owned by root.
+
+=item OpenSSH (and SSH) have a lot of options
+
+And while that is a good thing in general, in this particular case I was not
+confident that I could tune all the options correctly to make sure I wasn't
+completely securing the system.
+
+=back
+
+I really didn't want to provide outside users with a clever way to
+gain access to my machine. That's where this module comes into play. With
+C<Net::Dropbear::SSHd> you can control the entire lifecycle of SSHd, including
+which usernames are accpeted, which public keys are authorized and what
+commands are ran.
+
+=head1 CONSTRUCTOR
+
+=head2 new
+
+  my $sshd = Net::Dropbear::SSHd({ %params });
+
+Returns a new C<Net::Dropbear::SSHd> object.
+
+=head3 Attributes
+
+=over
+
+=item addrs
+
+A string or an array of addresses to bind to. B<Default>: Nothing
+
+=item keys
+
+An array of server keys for Dropbear. B<Default>: Generate keys automatically
+
+=item hooks
+
+A hashref of coderef's that get called during key points of the SSH server
+session.
+
+=back
+
+=head3 Dropbear options
+
+=over
+
+=item debug
+
+=item forkbg
+
+=item usingsyslog
+
+=item inetdmode
+
+=item norootlogin
+
+=item noauthpass
+
+=item norootpass
+
+=item allowblankpass
+
+=item delay_hostkey
+
+=item domotd
+
+=item noremotetcp
+
+=item nolocaltcp
+
+=back
+
+=head2 Hooks
+
+=head1 METHODS
+
+=head1 CHILD PROCESSES
 
 =head1 AUTHOR
 
-Jon Gentle E<lt>cpan@atrodo.orgE<gt>
+Jon Gentle E<lt>atrodo@cpan.orgE<gt>
 
 =head1 COPYRIGHT
 
