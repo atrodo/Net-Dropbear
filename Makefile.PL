@@ -80,6 +80,9 @@ sub build_libmemcached
   run("cd $db_src && make distclean")
     if -f "$db_src/Makefile";
 
+  run("cd $db_src && patch -N -i ../dropbear.patch")
+    if !-f "$db_src/libdropbear.h";
+
   run("cd $db_src && ./configure");
   run("cd $db_src && make");
 }
