@@ -1,4 +1,4 @@
 Revision history for Net-Dropbear
 
 {{$NEXT}}
-        - Initial release
+        - Initial release with Net::Dropbear::SSHd and related code for controlling the server side of Dropbear
