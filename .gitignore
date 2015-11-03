@@ -5,3 +5,6 @@
 MYMETA.*
 !META.json
 /.prove
+*.o
+*.a
+*.sw[po]
