@@ -521,7 +521,7 @@ This is used to indicate that the hook has decided not to do anything.
 This is used to indicate that the hook has failed and Dropbear should not
 continue.
 
-=over
+=back
 
 =head1 CHILD PROCESSES
 
