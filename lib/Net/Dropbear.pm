@@ -37,6 +37,4 @@ Copyright 2015- Jon Gentle
 
 This is free software. You may redistribute copies of it under the terms of the Artistic License 2 as published by The Perl Foundation.
 
-=head1 SEE ALSO
-
 =cut
