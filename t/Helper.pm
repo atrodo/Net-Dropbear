@@ -19,6 +19,8 @@ END { unlink $key_filename }
 
 our $sshd;
 
+chmod 0500, glob("$FindBin::Bin/test*");
+
 sub needed_output
 {
   my $needed = shift;
