@@ -276,7 +276,9 @@ setup_svr_opts(CLASS, ref)
     PROTOTYPE: $$
     CODE:
 	dropbear_init();
+#ifdef DEBUG_TRACE
         debug_trace             = _get_bool(ref, "debug");
+#endif
         svr_opts.forkbg         = _get_bool(ref, "forkbg");
 	svr_opts.usingsyslog    = _get_bool(ref, "usingsyslog");
 	svr_opts.inetdmode      = _get_bool(ref, "inetdmode");
