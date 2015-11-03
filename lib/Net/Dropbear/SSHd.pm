@@ -32,6 +32,12 @@ has keys => (
   },
 );
 
+has hooks => (
+  is => 'ro',
+  isa => HashRef,
+  default => sub { {} },
+);
+
 has debug          => ( is => "rw", isa => Bool, default => 0, );
 has forkbg         => ( is => "rw", isa => Bool, default => 0, );
 has usingsyslog    => ( is => "rw", isa => Bool, default => 0, );
@@ -45,14 +51,8 @@ has domotd         => ( is => "rw", isa => Bool, default => 0, );
 has noremotetcp    => ( is => "rw", isa => Bool, default => 1, );
 has nolocaltcp     => ( is => "rw", isa => Bool, default => 1, );
 
-has hooks => (
-  is => 'ro',
-  isa => HashRef,
-  default => sub { {} },
-);
-
 has child => (
-  is => 'rw',
+  is => 'rwp',
   isa => InstanceOf['Child::Link::Proc'],
 );
 
@@ -101,7 +101,7 @@ sub run
     croak 'Unexpected return from dropbear';
   });
 
-  $self->child($child->start);
+  $self->_set_child($child->start);
   $child_comm->close;
   $self->_set_comm($parent_comm);
 
@@ -139,6 +139,11 @@ sub auto_hook
   return Net::Dropbear::XS::HOOK_CONTINUE();
 }
 
+sub import
+{
+  require Net::Dropbear::XS;
+  Net::Dropbear::XS->export_to_level(1, @_);
+}
 
 1;
 __END__
@@ -214,10 +219,10 @@ completely securing the system.
 =back
 
 I really didn't want to provide outside users with a clever way to
-gain access to my machine. That's where this module comes into play. With
-C<Net::Dropbear::SSHd> you can control the entire lifecycle of SSHd, including
-which usernames are accpeted, which public keys are authorized and what
-commands are ran.
+gain access to my machine. That's where this module comes into play. The goal
+of C<Net::Dropbear::SSHd> is that you can control the entire lifecycle of
+SSHd, including which usernames are accpeted, which public keys are authorized
+and what commands are ran.
 
 =head1 CONSTRUCTOR
 
@@ -237,12 +242,13 @@ A string or an array of addresses to bind to. B<Default>: Nothing
 
 =item keys
 
-An array of server keys for Dropbear. B<Default>: Generate keys automatically
+An array of strings that are the server keys for Dropbear. B<Default>:
+Generate keys automatically
 
 =item hooks
 
 A hashref of coderef's that get called during key points of the SSH server
-session.
+session. See L</Hooks>.
 
 =back
 
@@ -252,35 +258,275 @@ session.
 
 =item debug
 
+If Dropbear is complied with trace debuging turned on (not the default),
+turning this on will enable Dropbear's debugging information to be dumped.
+
+B<Default:> off
+
 =item forkbg
+
+Turning the forkbg option on means that Dropbear will fork into the
+background. Since Net::Dropbear::SSHd forks to run the main Dropbear code,
+doing this second fork would seem redundant.
+
+B<Default:> off
 
 =item usingsyslog
 
-=item inetdmode
+Turning the usingsyslog option on means Dropbear will use syslog to output
+it's logs. Regardless of this setting, the on_log hook will still be called.
+
+B<Default:> off
 
 =item norootlogin
 
+Turning the norootlogin option on means that root can not login.
+
+B<Default:> on
+
 =item noauthpass
+
+Turning the noauthpass option on means that password authentication is not
+allowed
+
+B<Default:> on
 
 =item norootpass
 
+Turning the norootpass option on means that root cannot authenticate using
+a password.
+
+B<Default:> on
+
 =item allowblankpass
+
+Turning the allowblankpass option on means that if the SSH client requests it,
+Dropbear will authenticate someone with a blank password.
+
+B<Default:> off
 
 =item delay_hostkey
 
+Turning the delay_hostkey option on tells Dropbear to not generate hostkey
+files until the first user connects.  This allows for faster startup times
+the very first time in exchange for a delayed connection for the very first
+user.
+
+B<Default:> off
+
 =item domotd
+
+Turning on the domotd option means that when an interactive session is
+started, the message of the day is sent.
+
+B<Default:> off
 
 =item noremotetcp
 
+Turning on the noremotetcp option means that Dropbear will not create remote
+forwarded TCP tunnels.
+
+B<Default:> on
+
 =item nolocaltcp
+
+Turning on the nolocaltcp option means that Dropbear will not create locally
+forwarded TCP tunnels.
+
+B<Default:> on
 
 =back
 
-=head2 Hooks
+=head1 Hooks
+
+During the run of Dropbear, Net::Dropbear::SSHd hooks into certain points
+of the processing.  With these hooks, the outcome of Dropbear can be changed.
+Each hook can return one of the hook constants: L</HOOK_COMPLETE>,
+L</HOOK_CONTINUE> or L</HOOK_FAILURE>.  Unless otherwise noted, returning
+L</HOOK_CONTINUE> will result in Dropbear continuing as though the hook
+hadn't been called.
+
+=over
+
+=item on_log(priority, message)
+
+The on_log hook is called when Dropbear logs anything.
+
+=over
+
+=item HOOK_COMPLETE - No more logging will take place
+
+=item HOOK_FAILURE - Logging will continue as normal
+
+=back
+
+=item on_start()
+
+The on_start hook is called after Dropbear is done initalizing.
+
+=over
+
+=item HOOK_COMPLETE - Identical to HOOK_CONTINUE
+
+=item HOOK_FAILURE - Dropbear will exit
+
+=back
+
+=item on_username(username)
+
+The on_username hook is called when a username is given. Returning anything
+but HOOK_CONTINUE from this will prevent L</on_passwd_fill> or
+L</on_shadow_fill> from being called.
+
+=over
+
+=item HOOK_COMPLETE - The username is acceptable and dummy entries are used for the password file
+
+=item HOOK_FAILURE - The username is rejected
+
+=back
+
+=item on_passwd_fill(L<Net::Dropbear::XS::AuthState|AuthState>, username)
+
+The on_passwd_fill hook is called when Dropbear is filling in information
+for a user from the passwd file.  The L<Net::Dropbear::XS::AuthState|AuthState>
+paramater is an object that can be manipulated to fill in information for
+Dropbear. See L<Net::Dropbear::XS::AuthState>. If any AuthState data is left
+invalid, Dropbear will exit.
+
+=over
+
+=item HOOK_COMPLETE - The L<AuthState|Net::Dropbear::XS::AuthState> object should be used as the passwd information.
+
+=item HOOK_FAILURE - The passwd information is invalid and the user connection will be rejected.
+
+=back
+
+=item on_shadow_fill(crypt_password, pw_name)
+
+The on_shadow_fill hook is called when the shadow file is consulted for a
+users password.  Note that this is called even if HOOK_COMPLETE is returned
+from on_passwd_fill.  The first paramter (crypt_password) is mutable and
+can be used to set what the user's crypted password is. If the crypt_password
+is invalid (null), Dropbear will exit.
+
+=over
+
+=item HOOK_COMPLETE - The shadow file will not be consulted for the given user
+
+=item HOOK_FAILURE - Ignored
+
+=back
+
+=item on_check_pubkey(authkeys, pw_name)
+
+The on_check_pubkey hook is called right before the the public keys for a
+user is checked. The first paramater, C<authkeys>, is an string that can be
+populated with an L<authorized_keys(8)> file and it will be used to
+authenticate the user given with pw_name.
+
+=over
+
+=item HOOK_COMPLETE - Identical to HOOK_CONTINUE
+
+=item HOOK_FAILURE - The public keys could not be retrieved and will not be checked.
+
+=back
+
+=item on_new_channel(on_new_channel)
+
+The on_new_channel hook is called when the client requests a new channel.
+The first paramater, C<on_new_channel>, will contain the channel type as a
+string.
+
+=over
+
+=item HOOK_COMPLETE - Identical to HOOK_CONTINUE
+
+=item HOOK_FAILURE - The channel is denied with C<SSH_OPEN_ADMINISTRATIVELY_PROHIBITED>
+
+=back
+
+=item on_chansess_command(L<Net::Dropbear::XS::SessionAccept|chansess>)
+
+The on_chansess_command hook is called when a new command is being requested
+by the client.  The first paramater, L<Net::Dropbear::XS::SessionAccept|chansess>,
+is an object that should be used to let Dropbear know how to interact with
+the channel.  See L<Net::Dropbear::XS::SessionAccept> for more details.
+
+=over
+
+=item HOOK_COMPLETE - No attempts will be made to start the command specified
+
+=item HOOK_CONTINUE - The values from L<Net::Dropbear::XS::SessionAccept|chansess> will be copied into Dropbear and used in Dropbear's default operations
+
+=item HOOK_FAILURE - The command session will behave as though the command had vailed
+
+=back
+
+=back
 
 =head1 METHODS
 
+=over
+
+=item run
+
+Call C<$sshd->run> to start Dropbear.
+
+=item child
+
+If Dropbear has been started, then this will return the L<Child::Link::Proc>
+object of the child process. If Dropbear is not running, this will return
+C<undef>. In the child process this will be C<undef> as well.
+
+=item comm
+
+The C<comm> method is a convience for both parent and child processes. This
+contains a two-way socket between the parent and child (and sub-children)
+processes.  This is a AF_UNIX socket, which means you can pass new file
+handles between the processes.
+
+=item is_running
+
+Returns true if Dropbear is running, false if it's not.
+
+=item kill
+
+This will stop Dropbear.
+
+=item wait
+
+This waits for Dropbear to exit after it is sent the kill signal.
+
+=back
+
+=head1 CONSTANTS
+
+The constants below are exported by default.
+
+=over
+
+=item HOOK_COMPLETE
+
+This is used to indicate that a hook is done and not to use Dropbear's default
+operations.
+
+=item HOOK_CONTINUE
+
+This is used to indicate that the hook has decided not to do anything.
+
+=item HOOK_FAILURE
+
+This is used to indicate that the hook has failed and Dropbear should not
+continue.
+
+=over
+
 =head1 CHILD PROCESSES
+
+Since Dropbear is a program itself, it is ran as a child process.  Each
+connection will also have it's own child process.
 
 =head1 AUTHOR
 
@@ -294,6 +540,9 @@ Copyright 2015- Jon Gentle
 
 This is free software. You may redistribute copies of it under the terms of the Artistic License 2 as published by The Perl Foundation.
 
-=head1 SEE ALSO
+This includes a complete copy of Dropbear that is patched and used. The 
+majority of Dropbear is Copyright (c) 2002-2014 Matt Johnston under the MIT
+license.  See L<https://matt.ucc.asn.au/dropbear/dropbear.html> for details
+about Dropbear and it's license.
 
 =cut

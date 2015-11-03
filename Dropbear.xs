@@ -385,54 +385,6 @@ BOOT:
     newCONSTSUB(stash, "AUTH_TYPE_INTERACT",  newSViv (AUTH_TYPE_INTERACT));
 }
 
-unsigned char
-authtypes(THIS, __value = NO_INIT)
-        Net::Dropbear::XS::AuthState THIS
-        unsigned char __value
-    PROTOTYPE: $;$
-    CODE:
-        if (items > 1)
-            THIS->authtypes = __value;
-        RETVAL = THIS->authtypes;
-    OUTPUT:
-        RETVAL
- 
-unsigned int
-failcount(THIS, __value = NO_INIT)
-        Net::Dropbear::XS::AuthState THIS
-        unsigned int __value
-    PROTOTYPE: $;$
-    CODE:
-        if (items > 1)
-            THIS->failcount = __value;
-        RETVAL = THIS->failcount;
-    OUTPUT:
-        RETVAL
- 
-unsigned
-authdone(THIS, __value = NO_INIT)
-        Net::Dropbear::XS::AuthState THIS
-        unsigned __value
-    PROTOTYPE: $;$
-    CODE:
-        if (items > 1)
-            THIS->authdone = __value;
-        RETVAL = THIS->authdone;
-    OUTPUT:
-        RETVAL
- 
-unsigned
-perm_warn(THIS, __value = NO_INIT)
-        Net::Dropbear::XS::AuthState THIS
-        unsigned __value
-    PROTOTYPE: $;$
-    CODE:
-        if (items > 1)
-            THIS->perm_warn = __value;
-        RETVAL = THIS->perm_warn;
-    OUTPUT:
-        RETVAL
- 
 uid_t
 pw_uid(THIS, __value = NO_INIT)
         Net::Dropbear::XS::AuthState THIS
@@ -513,8 +465,6 @@ channel_index(THIS, __value = NO_INIT)
         int __value
     PROTOTYPE: $;$
     CODE:
-        if (items > 1)
-            THIS->channel_index = __value;
         RETVAL = THIS->channel_index;
     OUTPUT:
         RETVAL

@@ -27,11 +27,13 @@ my $sshd = Net::Dropbear::SSHd->new(
 
 $sshd->run;
 
+$planned++;
 cmp_ok( waitpid( $sshd->child->pid, WNOHANG ), '>=', 0, 'SSHd started' );
 
 $sshd->kill;
 $sshd->wait;
 
+$planned++;
 cmp_ok( waitpid( $sshd->child->pid, WNOHANG ), '<', 0, 'SSHd stopped' );
 
 done_testing($planned);
