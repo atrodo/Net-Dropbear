@@ -1,51 +1,73 @@
 {
-   "abstract" : "Blah blah blah",
+   "abstract" : "Use Dropbear SSH inside of perl",
    "author" : [
-      "Jon Gentle <cpan@atrodo.org>"
+      "Jon Gentle <atrodo@cpan.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Milla version v1.0.5, Dist::Zilla version 5.019, CPAN::Meta::Converter version 2.141520",
+   "generated_by" : "Dist::Zilla version 5.041, Dist::Milla version v1.0.15, CPAN::Meta::Converter version 2.150005",
    "license" : [
-      "perl_5"
+      "artistic_2"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
-      "version" : "2"
+      "version" : 2
    },
    "name" : "Net-Dropbear",
    "no_index" : {
       "directory" : [
-         "t",
-         "xt",
+         "eg",
+         "examples",
          "inc",
          "share",
-         "eg",
-         "examples"
+         "t",
+         "xt"
       ]
    },
    "prereqs" : {
       "configure" : {
          "requires" : {
-            "ExtUtils::MakeMaker" : "6.30"
+            "ExtUtils::MakeMaker" : "0"
          }
       },
       "develop" : {
          "requires" : {
+            "Dist::Milla" : "v1.0.15",
             "Test::Pod" : "1.41"
          }
       },
       "runtime" : {
          "requires" : {
-            "perl" : "5.008005"
+            "Child" : "0",
+            "Moo" : "2.000",
+            "Try::Tiny" : "0",
+            "Types::Standard" : "0",
+            "perl" : "5.012000"
          }
       },
       "test" : {
          "requires" : {
+            "IO::Pty" : "0",
+            "Net::OpenSSH" : "0",
+            "Net::SFTP::Foreign" : "0",
             "Test::More" : "0.96"
          }
       }
    },
    "release_status" : "stable",
-   "version" : "0.01"
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/atrodo/Net-Dropbear/issues"
+      },
+      "homepage" : "https://github.com/atrodo/Net-Dropbear",
+      "repository" : {
+         "type" : "git",
+         "url" : "https://github.com/atrodo/Net-Dropbear.git",
+         "web" : "https://github.com/atrodo/Net-Dropbear"
+      }
+   },
+   "version" : "0.01",
+   "x_contributors" : [
+      "Jon Gentle <atrodo@atrodo.org>"
+   ]
 }
 

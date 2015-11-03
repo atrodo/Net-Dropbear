@@ -1,18 +1,17 @@
 # NAME
 
-Net::Dropbear - Blah blah blah
-
-# SYNOPSIS
-
-    use Net::Dropbear;
+Net::Dropbear - Use Dropbear SSH inside of perl
 
 # DESCRIPTION
 
-Net::Dropbear is
+This is a container package. You want one of the sub packages:
+
+- [Net::Dropbear::SSHd](https://metacpan.org/pod/Net::Dropbear::SSHd) - Embed and control a Dropbear SSH server inside of perl
+- [Net::Dropbear::SSH](https://metacpan.org/pod/Net::Dropbear::SSH) - Embed and control a Dropbear SSH client inside of perl (Not implemented yet)
 
 # AUTHOR
 
-Jon Gentle <cpan@atrodo.org>
+Jon Gentle &lt;atrodo@cpan.org>
 
 # COPYRIGHT
 
@@ -20,7 +19,6 @@ Copyright 2015- Jon Gentle
 
 # LICENSE
 
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself.
+This is free software. You may redistribute copies of it under the terms of the Artistic License 2 as published by The Perl Foundation.
 
 # SEE ALSO
