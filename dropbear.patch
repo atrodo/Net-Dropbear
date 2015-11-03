@@ -300,7 +300,7 @@ diff -uN dropbear-2015.67/svr-chansession.c dropbear/svr-chansession.c
  	pty_setowner(pw, chansess->tty);
  
  	/* Set up the rows/col counts */
-@@ -669,6 +674,105 @@
+@@ -669,6 +674,106 @@
  		}
  	}
  	
@@ -376,7 +376,8 @@ diff -uN dropbear-2015.67/svr-chansession.c dropbear/svr-chansession.c
 +		ses.maxfd = MAX(ses.maxfd, channel->readfd);
 +		ses.maxfd = MAX(ses.maxfd, channel->errfd);
 +
-+		addchildpid(chansess, chansess->pid);
++		if (chansess->pid > 0)
++			addchildpid(chansess, chansess->pid);
 +
 +		if (svr_ses.lastexit.exitpid != -1) {
 +			unsigned int i;
