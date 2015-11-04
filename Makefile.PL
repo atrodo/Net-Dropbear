@@ -22,24 +22,52 @@ $objs = join " ", map {"dropbear/$_"} split( /\s+/xms, $objs );
 $libs .= ' -lcrypt';
 
 my %WriteMakefileArgs = (
-##{ $plugin->get_default(qw/ABSTRACT/) ##}
-##{ $plugin->get_default(qw/AUTHOR/) ##}
-##{ $plugin->get_default(qw/DISTNAME/) ##}
-##{ $plugin->get_default(qw/LICENSE/) ##}
-##{ $plugin->get_default(qw/NAME/) ##}
-##{ $plugin->get_default(qw/MIN_PERL_VERSION/) ##}
-##{ $plugin->get_default(qw/VERSION/) ##}
+  'ABSTRACT' => 'Use Dropbear SSH inside of perl',
+  'AUTHOR' => 'Jon Gentle <atrodo@cpan.org>',
+  'DISTNAME' => 'Net-Dropbear',
+  'LICENSE' => 'artistic_2',
+  'NAME' => 'Net::Dropbear',
+  'MIN_PERL_VERSION' => '5.012000',
+  'VERSION' => '0.02',
 
   test => { TESTS => "t/*.t" },
   INC => '-I. -Idropbear -Idropbear/libtomcrypt/src/headers',
   LDFROM => '$(OBJECT)' . " $objs",
   LIBS   => $libs,
 
-##{ $plugin->get_prereqs(1) ##}
+  'CONFIGURE_REQUIRES' => {
+    'ExtUtils::MakeMaker' => '0'
+  },
+  'PREREQ_PM' => {
+    'Child' => '0',
+    'Moo' => '2.000',
+    'Try::Tiny' => '0',
+    'Types::Standard' => '0'
+  },
+  'TEST_REQUIRES' => {
+    'IO::Pty' => '0',
+    'Net::OpenSSH' => '0',
+    'Net::SFTP::Foreign' => '0',
+    'Test::More' => '0.96'
+  },
 );
 
 my %FallbackPrereqs = (
-##{ $plugin->get_prereqs(0) ##}
+  'BUILD_REQUIRES' => {
+    'IO::Pty' => '0',
+    'Net::OpenSSH' => '0',
+    'Net::SFTP::Foreign' => '0',
+    'Test::More' => '0.96'
+  },
+  'CONFIGURE_REQUIRES' => {
+    'ExtUtils::MakeMaker' => '0'
+  },
+  'PREREQ_PM' => {
+    'Child' => '0',
+    'Moo' => '2.000',
+    'Try::Tiny' => '0',
+    'Types::Standard' => '0'
+  },
 );
 
 unless ( eval { ExtUtils::MakeMaker->VERSION(6.63_03) } )

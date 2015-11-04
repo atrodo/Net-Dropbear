@@ -2,7 +2,7 @@ package Net::Dropbear;
 
 use strict;
 use v5.12;
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 1;
 __END__
