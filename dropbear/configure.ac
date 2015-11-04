@@ -9,6 +9,8 @@ AC_PREREQ(2.59)
 AC_INIT
 AC_CONFIG_SRCDIR(buffer.c)
 
+LT_INIT
+
 OLDCFLAGS=$CFLAGS
 # Checks for programs.
 AC_PROG_CC
