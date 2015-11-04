@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use 5.008005;
+use 5.012000;
 
 use ExtUtils::MakeMaker 6.30;
 
@@ -22,29 +22,34 @@ $objs = join " ", map {"dropbear/$_"} split( /\s+/xms, $objs );
 $libs .= ' -lcrypt';
 
 my %WriteMakefileArgs = (
-  "ABSTRACT"           => "Blah blah blah",
-  "AUTHOR"             => "Jon Gentle <cpan\@atrodo.org>",
-  "CONFIGURE_REQUIRES" => { "ExtUtils::MakeMaker" => "6.30" },
-  "DISTNAME"           => "Net-Dropbear",
-  "EXE_FILES"          => [],
-  "LICENSE"            => "perl",
-  "NAME"               => "Net::Dropbear",
-  "PREREQ_PM"          => {},
-  "TEST_REQUIRES"      => { "Test::More" => "0.96" },
-  "VERSION"            => "0.01",
-  "test"               => { "TESTS" => "t/*.t" },
-  INC                  => '-I. -Idropbear -Idropbear/libtomcrypt/src/headers',
-  LDFROM               => '$(OBJECT)' . " $objs",
-  LIBS                 => $libs,
+##{ $plugin->get_default(qw/ABSTRACT/) ##}
+##{ $plugin->get_default(qw/AUTHOR/) ##}
+##{ $plugin->get_default(qw/DISTNAME/) ##}
+##{ $plugin->get_default(qw/LICENSE/) ##}
+##{ $plugin->get_default(qw/NAME/) ##}
+##{ $plugin->get_default(qw/MIN_PERL_VERSION/) ##}
+##{ $plugin->get_default(qw/VERSION/) ##}
+
+  test => { TESTS => "t/*.t" },
+  INC => '-I. -Idropbear -Idropbear/libtomcrypt/src/headers',
+  LDFROM => '$(OBJECT)' . " $objs",
+  LIBS   => $libs,
+
+##{ $plugin->get_prereqs(1) ##}
 );
 
-my %FallbackPrereqs = ( "Test::More" => "0.96" );
+my %FallbackPrereqs = (
+##{ $plugin->get_prereqs(0) ##}
+);
 
 unless ( eval { ExtUtils::MakeMaker->VERSION(6.63_03) } )
 {
   delete $WriteMakefileArgs{TEST_REQUIRES};
   delete $WriteMakefileArgs{BUILD_REQUIRES};
-  $WriteMakefileArgs{PREREQ_PM} = \%FallbackPrereqs;
+  $WriteMakefileArgs{PREREQ_PM} = {
+    %{ $FallbackPrereqs{PREREQ_PM} },
+    %{ $FallbackPrereqs{BUILD_REQUIRES} },
+  };
 }
 
 delete $WriteMakefileArgs{CONFIGURE_REQUIRES}
@@ -77,4 +82,3 @@ sub build_dropbear
   run("cd $db_src && ./configure");
   run("cd $db_src && make");
 }
-
