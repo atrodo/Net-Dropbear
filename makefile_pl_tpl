@@ -15,59 +15,31 @@ if ($@)
 }
 
 my $objs
-    = qx[make -f printvar.mak -f dropbear/Makefile print-dropbearobjs print-LIBTOM_LIBS];
-my $libs = qx[make -f printvar.mak -f dropbear/Makefile print-LIBS];
+    = qx[make -s -f printvar.mak -f dropbear/Makefile print-dropbearobjs print-LIBTOM_LIBS 2>/dev/null];
+my $libs = qx[make -s -f printvar.mak -f dropbear/Makefile print-LIBS 2>/dev/null];
 
 $objs = join " ", map {"dropbear/$_"} split( /\s+/xms, $objs );
 $libs .= ' -lcrypt';
 
 my %WriteMakefileArgs = (
-  'ABSTRACT' => 'Use Dropbear SSH inside of perl',
-  'AUTHOR' => 'Jon Gentle <atrodo@cpan.org>',
-  'DISTNAME' => 'Net-Dropbear',
-  'LICENSE' => 'artistic_2',
-  'NAME' => 'Net::Dropbear',
-  'MIN_PERL_VERSION' => '5.012000',
-  'VERSION' => '0.03',
+##{ $plugin->get_default(qw/ABSTRACT/) ##}
+##{ $plugin->get_default(qw/AUTHOR/) ##}
+##{ $plugin->get_default(qw/DISTNAME/) ##}
+##{ $plugin->get_default(qw/LICENSE/) ##}
+##{ $plugin->get_default(qw/NAME/) ##}
+##{ $plugin->get_default(qw/MIN_PERL_VERSION/) ##}
+##{ $plugin->get_default(qw/VERSION/) ##}
 
   test => { TESTS => "t/*.t" },
   INC => '-I. -Idropbear -Idropbear/libtomcrypt/src/headers',
   LDFROM => '$(OBJECT)' . " $objs",
   LIBS   => $libs,
 
-  'CONFIGURE_REQUIRES' => {
-    'ExtUtils::MakeMaker' => '0'
-  },
-  'PREREQ_PM' => {
-    'Child' => '0',
-    'Moo' => '2.000',
-    'Try::Tiny' => '0',
-    'Types::Standard' => '0'
-  },
-  'TEST_REQUIRES' => {
-    'IO::Pty' => '0',
-    'Net::OpenSSH' => '0',
-    'Net::SFTP::Foreign' => '0',
-    'Test::More' => '0.96'
-  },
+##{ $plugin->get_prereqs(1) ##}
 );
 
 my %FallbackPrereqs = (
-  'BUILD_REQUIRES' => {
-    'IO::Pty' => '0',
-    'Net::OpenSSH' => '0',
-    'Net::SFTP::Foreign' => '0',
-    'Test::More' => '0.96'
-  },
-  'CONFIGURE_REQUIRES' => {
-    'ExtUtils::MakeMaker' => '0'
-  },
-  'PREREQ_PM' => {
-    'Child' => '0',
-    'Moo' => '2.000',
-    'Try::Tiny' => '0',
-    'Types::Standard' => '0'
-  },
+##{ $plugin->get_prereqs(0) ##}
 );
 
 unless ( eval { ExtUtils::MakeMaker->VERSION(6.63_03) } )
@@ -110,4 +82,3 @@ sub build_dropbear
   run("cd $db_src && ./configure");
   run("cd $db_src && make");
 }
-
