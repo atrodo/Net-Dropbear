@@ -20,32 +20,32 @@ typedef struct AuthState * Net__Dropbear__XS__AuthState;
 
 int _get_bool(SV *self, char *method)
 {
-	int count;
-	int result;
-	SV *option;
+        int count;
+        int result;
+        SV *option;
 
-	dSP;
+        dSP;
 
-	ENTER;
-	SAVETMPS;
+        ENTER;
+        SAVETMPS;
 
-	PUSHMARK(SP);
-	XPUSHs(self);
-	PUTBACK;
-	count = call_method(method, G_SCALAR);
-	SPAGAIN;
+        PUSHMARK(SP);
+        XPUSHs(self);
+        PUTBACK;
+        count = call_method(method, G_SCALAR);
+        SPAGAIN;
 
-	if (count != 1)
-	  croak("Too much result from %s\n", method);
+        if (count != 1)
+          croak("Too much result from %s\n", method);
 
-	option = POPs;
-	result = SvTRUE(option);
+        option = POPs;
+        result = SvTRUE(option);
 
-	PUTBACK;
-	FREETMPS;
-	LEAVE;
+        PUTBACK;
+        FREETMPS;
+        LEAVE;
 
-	return result;
+        return result;
 }
 
 SV* hooks_self;
@@ -245,7 +245,7 @@ int hooks_on_chansess_command(struct dropbear_chansess_accept *chansess)
     return RETVAL;
 }
 
-MODULE = Net::Dropbear	PACKAGE = Net::Dropbear::XS
+MODULE = Net::Dropbear  PACKAGE = Net::Dropbear::XS
 
 BOOT:
 {
@@ -263,41 +263,41 @@ gen_key(const char* filename, enum signkey_type keytype=DROPBEAR_SIGNKEY_RSA, in
 
 void
 svr_main(CLASS)
-	SV *CLASS = NO_INIT
+        SV *CLASS = NO_INIT
     PROTOTYPE: $
     CODE:
-	dropbear_run();
-	/* Never Returns */
+        dropbear_run();
+        /* Never Returns */
 
 void
-setup_svr_opts(CLASS, ref)
-	SV *CLASS = NO_INIT
-	SV * ref
+setup_svr_opts(CLASS, options)
+        SV *CLASS = NO_INIT
+        SV * options
     PROTOTYPE: $$
     CODE:
-	dropbear_init();
+        dropbear_init();
 #ifdef DEBUG_TRACE
-        debug_trace             = _get_bool(ref, "debug");
+        debug_trace             = _get_bool(options, "debug");
 #endif
-        svr_opts.forkbg         = _get_bool(ref, "forkbg");
-	svr_opts.usingsyslog    = _get_bool(ref, "usingsyslog");
-	svr_opts.inetdmode      = _get_bool(ref, "inetdmode");
-        svr_opts.norootlogin    = _get_bool(ref, "norootlogin");
-        svr_opts.noauthpass     = _get_bool(ref, "noauthpass");
-        svr_opts.norootpass     = _get_bool(ref, "norootpass");
-        svr_opts.allowblankpass = _get_bool(ref, "allowblankpass");
-        svr_opts.delay_hostkey  = _get_bool(ref, "delay_hostkey");
+        svr_opts.forkbg         = _get_bool(options, "forkbg");
+        svr_opts.usingsyslog    = _get_bool(options, "usingsyslog");
+        svr_opts.inetdmode      = _get_bool(options, "inetdmode");
+        svr_opts.norootlogin    = _get_bool(options, "norootlogin");
+        svr_opts.noauthpass     = _get_bool(options, "noauthpass");
+        svr_opts.norootpass     = _get_bool(options, "norootpass");
+        svr_opts.allowblankpass = _get_bool(options, "allowblankpass");
+        svr_opts.delay_hostkey  = _get_bool(options, "delay_hostkey");
 #ifdef DO_MOTD
-        svr_opts.domotd = _get_bool(ref, "domotd");
+        svr_opts.domotd = _get_bool(options, "domotd");
 #endif
 #ifdef ENABLE_SVR_REMOTETCPFWD
-        svr_opts.noremotetcp = _get_bool(ref, "noremotetcp");
+        svr_opts.noremotetcp = _get_bool(options, "noremotetcp");
 #endif
 #ifdef ENABLE_SVR_LOCALTCPFWD
-        svr_opts.nolocaltcp = _get_bool(ref, "nolocaltcp");
+        svr_opts.nolocaltcp = _get_bool(options, "nolocaltcp");
 #endif
 
-        hooks_self = ref;
+        hooks_self = options;
         hooks.on_log = hooks_on_log;
         hooks.on_start = hooks_on_start;
         hooks.on_username = hooks_on_username;
@@ -315,7 +315,7 @@ setup_svr_opts(CLASS, ref)
         SAVETMPS;
 
         PUSHMARK(SP);
-        XPUSHs(ref);
+        XPUSHs(options);
         PUTBACK;
         count = call_method("addrs", G_SCALAR);
         SPAGAIN;
@@ -331,7 +331,7 @@ setup_svr_opts(CLASS, ref)
         PUTBACK;
 
         AV* addrs = (AV*)SvRV(ref_result);
-        len = av_tindex(addrs);
+        len = av_len(addrs);
 
         for (i = 0; i <= len; i++)
         {
@@ -342,21 +342,21 @@ setup_svr_opts(CLASS, ref)
           }
         }
 
-	PUSHMARK(SP);
-	XPUSHs(ref);
-	PUTBACK;
-	count = call_method("keys", G_SCALAR);
-	SPAGAIN;
+        PUSHMARK(SP);
+        XPUSHs(options);
+        PUTBACK;
+        count = call_method("keys", G_SCALAR);
+        SPAGAIN;
 
-	if (count != 1)
-	  croak("Too much result from %s\n", "keys");
+        if (count != 1)
+          croak("Too much result from %s\n", "keys");
 
-	ref_result = POPs;
+        ref_result = POPs;
 
         if (!SvROK(ref_result) || SvTYPE(SvRV(ref_result)) != SVt_PVAV)
           croak("$self->addr did not return an array");
 
-	PUTBACK;
+        PUTBACK;
 
         AV* svr_keys = (AV*)SvRV(ref_result);
         len = av_len(svr_keys);
@@ -370,10 +370,10 @@ setup_svr_opts(CLASS, ref)
           }
         }
 
-	FREETMPS;
-	LEAVE;
+        FREETMPS;
+        LEAVE;
 
-MODULE = Net::Dropbear	PACKAGE = Net::Dropbear::XS::AuthState
+MODULE = Net::Dropbear  PACKAGE = Net::Dropbear::XS::AuthState
 
 BOOT:
 {
@@ -457,7 +457,7 @@ pw_passwd(THIS, __value = NO_INIT)
     OUTPUT:
         RETVAL
  
-MODULE = Net::Dropbear	PACKAGE = Net::Dropbear::XS::SessionAccept
+MODULE = Net::Dropbear  PACKAGE = Net::Dropbear::XS::SessionAccept
 
 int
 channel_index(THIS, __value = NO_INIT)
@@ -477,7 +477,7 @@ cmd(THIS, __value = NO_INIT)
     CODE:
         if (items > 1)
             THIS->cmd = m_strdup(__value);
-        RETVAL = THIS->cmd;
+        RETVAL = (char *)THIS->cmd;
     OUTPUT:
         RETVAL
  
