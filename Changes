@@ -2,10 +2,14 @@ Revision history for Net-Dropbear
 
 {{$NEXT}}
 
+0.03  2015-11-05 01:47:00 EST
+        * Try again to get compiled on x86_64
+        * Update some XS thanks to the suggestions of ppport.h
+
 0.02  2015-11-03 23:14:12 EST
-        - Update the autoconf to try and get x86_64 to compile Dropbear
-        - Clean up some POD
-        - Clean up Makefile.PL
+        * Update the autoconf to try and get x86_64 to compile Dropbear
+        * Clean up some POD
+        * Clean up Makefile.PL
 
 0.01  2015-11-03 13:29:05 EST
-        - Initial release with Net::Dropbear::SSHd and related code for controlling the server side of Dropbear
+        * Initial release with Net::Dropbear::SSHd and related code for controlling the server side of Dropbear

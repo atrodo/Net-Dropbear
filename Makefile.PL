@@ -15,8 +15,8 @@ if ($@)
 }
 
 my $objs
-    = qx[make -f printvar.mak -f dropbear/Makefile print-dropbearobjs print-LIBTOM_LIBS];
-my $libs = qx[make -f printvar.mak -f dropbear/Makefile print-LIBS];
+    = qx[make -s -f printvar.mak -f dropbear/Makefile print-dropbearobjs print-LIBTOM_LIBS 2>/dev/null];
+my $libs = qx[make -s -f printvar.mak -f dropbear/Makefile print-LIBS 2>/dev/null];
 
 $objs = join " ", map {"dropbear/$_"} split( /\s+/xms, $objs );
 $libs .= ' -lcrypt';
