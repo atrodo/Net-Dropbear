@@ -9,8 +9,6 @@ AC_PREREQ(2.59)
 AC_INIT
 AC_CONFIG_SRCDIR(buffer.c)
 
-LT_INIT
-
 OLDCFLAGS=$CFLAGS
 # Checks for programs.
 AC_PROG_CC
@@ -34,6 +32,10 @@ AC_SYS_LARGEFILE
 AC_CANONICAL_HOST
 
 case "$host" in
+
+*-*-linux-gnu)
+	CFLAGS="$CFLAGS -fPIC"
+	;;
 
 *-*-linux*)
 	no_ptmx_check=1
