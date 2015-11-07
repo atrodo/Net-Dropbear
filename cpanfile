@@ -1,4 +1,4 @@
-requires 'perl', '5.012000';
+requires 'perl', '5.008008';
 
 requires 'Moo', '2.000';
 requires 'Try::Tiny';
