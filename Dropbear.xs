@@ -24,6 +24,7 @@ int _get_bool(SV *self, char *method)
         int result;
         SV *option;
 
+        dTHX;
         dSP;
 
         ENTER;
@@ -54,6 +55,7 @@ int hooks_on(const char *hook, AV* args)
     int RETVAL;
     int len, i;
 
+    dTHX;
     dSP;
 
     ENTER;
@@ -100,6 +102,7 @@ int hooks_on(const char *hook, AV* args)
 
 int hooks_on_log(int priority, const char *message)
 {
+    dTHX;
     ENTER;
     SAVETMPS;
 
@@ -117,6 +120,7 @@ int hooks_on_log(int priority, const char *message)
 
 int hooks_on_start()
 {
+    dTHX;
     ENTER;
     SAVETMPS;
 
@@ -132,6 +136,7 @@ int hooks_on_start()
 
 int hooks_on_username(const char* username)
 {
+    dTHX;
     ENTER;
     SAVETMPS;
 
@@ -148,6 +153,7 @@ int hooks_on_username(const char* username)
 
 int hooks_on_passwd_fill(struct AuthState *auth, const char *username)
 {
+    dTHX;
     ENTER;
     SAVETMPS;
 
@@ -167,6 +173,7 @@ int hooks_on_passwd_fill(struct AuthState *auth, const char *username)
 
 int hooks_on_shadow_fill(char** crypt_password, const char *pw_name)
 {
+    dTHX;
     ENTER;
     SAVETMPS;
 
@@ -190,6 +197,7 @@ int hooks_on_shadow_fill(char** crypt_password, const char *pw_name)
 
 int hooks_on_check_pubkey(char** authkeys, const char *pw_name)
 {
+    dTHX;
     ENTER;
     SAVETMPS;
 
@@ -213,6 +221,7 @@ int hooks_on_check_pubkey(char** authkeys, const char *pw_name)
 
 int hooks_on_new_channel(const char* type)
 {
+    dTHX;
     ENTER;
     SAVETMPS;
 
@@ -229,6 +238,7 @@ int hooks_on_new_channel(const char* type)
 
 int hooks_on_chansess_command(struct dropbear_chansess_accept *chansess)
 {
+    dTHX;
     ENTER;
     SAVETMPS;
 
