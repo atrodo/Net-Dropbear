@@ -2,6 +2,11 @@ Revision history for Net-Dropbear
 
 {{$NEXT}}
 
+0.04  2015-11-06 22:38:15 EST
+        * Drop the min perl requirement to 5.8.8
+        * Use the c/cpp/ld flags from perl to compile dropbear
+        * Rename "kill" to "stop"
+
 0.03  2015-11-05 01:47:00 EST
         * Try again to get compiled on x86_64
         * Update some XS thanks to the suggestions of ppport.h

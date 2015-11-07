@@ -1,11 +1,11 @@
 use strict;
 use warnings;
 
-use 5.012000;
+use 5.8.8;
 
 use ExtUtils::MakeMaker 6.30;
+use Config;
 
-my $db_src = 'dropbear/';
 eval { build_dropbear() };
 if ($@)
 {
@@ -16,7 +16,8 @@ if ($@)
 
 my $objs
     = qx[make -s -f printvar.mak -f dropbear/Makefile print-dropbearobjs print-LIBTOM_LIBS 2>/dev/null];
-my $libs = qx[make -s -f printvar.mak -f dropbear/Makefile print-LIBS 2>/dev/null];
+my $libs
+    = qx[make -s -f printvar.mak -f dropbear/Makefile print-LIBS 2>/dev/null];
 
 $objs = join " ", map {"dropbear/$_"} split( /\s+/xms, $objs );
 $libs .= ' -lcrypt';
@@ -27,8 +28,8 @@ my %WriteMakefileArgs = (
   'DISTNAME' => 'Net-Dropbear',
   'LICENSE' => 'artistic_2',
   'NAME' => 'Net::Dropbear',
-  'MIN_PERL_VERSION' => '5.012000',
-  'VERSION' => '0.03',
+  'MIN_PERL_VERSION' => '5.008008',
+  'VERSION' => '0.04',
 
   test => { TESTS => "t/*.t" },
   INC => '-I. -Idropbear -Idropbear/libtomcrypt/src/headers',
@@ -92,7 +93,12 @@ sub run
 
 sub build_dropbear
 {
+  my $db_src = 'dropbear/';
   local $ENV{DESTDIR};    # do not let Perl module config leak through
+
+  local $ENV{CFLAGS}   = $Config{cccdlflags} . ' ' . $Config{ccflags};
+  local $ENV{LDFLAGS}  = $Config{ldflags} . ' ' . $Config{ccdlflags};
+  local $ENV{CPPFLAGS} = $Config{cppflags};
 
   return
       if -e "$db_src/dropbear";
