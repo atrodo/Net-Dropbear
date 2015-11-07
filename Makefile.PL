@@ -46,8 +46,6 @@ my %WriteMakefileArgs = (
   },
   'TEST_REQUIRES' => {
     'IO::Pty' => '0',
-    'Net::OpenSSH' => '0',
-    'Net::SFTP::Foreign' => '0',
     'Test::More' => '0.96'
   },
 );
@@ -55,8 +53,6 @@ my %WriteMakefileArgs = (
 my %FallbackPrereqs = (
   'BUILD_REQUIRES' => {
     'IO::Pty' => '0',
-    'Net::OpenSSH' => '0',
-    'Net::SFTP::Foreign' => '0',
     'Test::More' => '0.96'
   },
   'CONFIGURE_REQUIRES' => {

@@ -7,7 +7,5 @@ requires 'Child';
 
 on test => sub {
   requires 'Test::More', '0.96';
-  requires 'Net::OpenSSH';
   requires 'IO::Pty';
-  requires 'Net::SFTP::Foreign';
 };
