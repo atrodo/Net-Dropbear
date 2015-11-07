@@ -72,9 +72,6 @@
 /* Use /dev/ptc & /dev/pts */
 #undef HAVE_DEV_PTS_AND_PTC
 
-/* Define to 1 if you have the <dlfcn.h> header file. */
-#undef HAVE_DLFCN_H
-
 /* Define to 1 if you have the `dup2' function. */
 #undef HAVE_DUP2
 
@@ -383,10 +380,6 @@
 
 /* Define to 1 if you have the `_getpty' function. */
 #undef HAVE__GETPTY
-
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
-#undef LT_OBJDIR
 
 /* Define to the address where bug reports for this package should be sent. */
 #undef PACKAGE_BUGREPORT

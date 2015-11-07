@@ -3443,10 +3443,6 @@ case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 
 case "$host" in
 
-*-*-linux-gnu)
-	CFLAGS="$CFLAGS -fPIC"
-	;;
-
 *-*-linux*)
 	no_ptmx_check=1
 	;;

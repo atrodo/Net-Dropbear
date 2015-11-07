@@ -33,10 +33,6 @@ AC_CANONICAL_HOST
 
 case "$host" in
 
-*-*-linux-gnu)
-	CFLAGS="$CFLAGS -fPIC"
-	;;
-
 *-*-linux*)
 	no_ptmx_check=1
 	;;
