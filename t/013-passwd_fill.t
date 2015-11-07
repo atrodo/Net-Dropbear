@@ -142,7 +142,7 @@ my @ssh_cmd = (
   kill($ssh_pid);
 }
 
-$sshd->kill;
+$sshd->stop;
 $sshd->wait;
 
 done_testing($planned);

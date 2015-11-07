@@ -134,7 +134,7 @@ needed_output(
   note($_) while <$pty>;
 }
 
-$sshd->kill;
+$sshd->stop;
 $sshd->wait;
 
 done_testing($planned);

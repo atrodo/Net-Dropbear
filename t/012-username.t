@@ -101,7 +101,7 @@ my @ssh_cmd = (
   note($_) while <$pty>;
 }
 
-$sshd->kill;
+$sshd->stop;
 $sshd->wait;
 
 done_testing($planned);

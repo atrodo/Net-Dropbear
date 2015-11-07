@@ -108,7 +108,7 @@ sub run
   return;
 }
 
-sub kill
+sub stop
 {
   my $self = shift;
   if ($self->is_running)
@@ -457,7 +457,7 @@ handles between the processes.
 
 Returns true if Dropbear is running, false if it's not.
 
-=head2 kill
+=head2 stop
 
 This will stop Dropbear.
 

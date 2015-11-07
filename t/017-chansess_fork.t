@@ -95,7 +95,7 @@ needed_output(
 
 }
 
-$sshd->kill;
+$sshd->stop;
 $sshd->wait;
 
 done_testing($planned);
