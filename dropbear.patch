@@ -126,7 +126,7 @@ diff -uN dropbear-2015.67/common-session.c dropbear/common-session.c
  		return;
 diff -uN dropbear-2015.67/dropbear.h dropbear/dropbear.h
 --- dropbear-2015.67/dropbear.h	1969-12-31 19:00:00.000000000 -0500
-+++ dropbear/dropbear.h	2015-07-06 23:10:45.000000000 -0400
++++ dropbear/dropbear.h	2015-11-28 13:19:22.000000000 -0500
 @@ -0,0 +1,16 @@
 +
 +#ifndef _DROPBEAR_H_
@@ -146,8 +146,8 @@ diff -uN dropbear-2015.67/dropbear.h dropbear/dropbear.h
 +#endif
 diff -uN dropbear-2015.67/libdropbear.h dropbear/libdropbear.h
 --- dropbear-2015.67/libdropbear.h	1969-12-31 19:00:00.000000000 -0500
-+++ dropbear/libdropbear.h	2015-10-04 22:14:25.000000000 -0400
-@@ -0,0 +1,49 @@
++++ dropbear/libdropbear.h	2015-11-28 14:19:49.000000000 -0500
+@@ -0,0 +1,50 @@
 +#ifndef _LIBDROPBEAR_H_
 +#define _LIBDROPBEAR_H_
 +
@@ -177,6 +177,7 @@ diff -uN dropbear-2015.67/libdropbear.h dropbear/libdropbear.h
 +  int (*on_username)(const char *username);
 +  int (*on_passwd_fill)(struct AuthState *auth, const char *username);
 +  int (*on_shadow_fill)(char **crypt_password, const char *pw_name);
++  int (*on_crypt_passwd)(char **input_passwd, const char *salt, const char *pw_name);
 +  int (*on_check_pubkey)(char **authkeys, const char *pw_name);
 +  int (*on_new_channel)(const char *type);
 +  int (*on_chansess_command)(struct dropbear_chansess_accept *chansess);
@@ -199,9 +200,54 @@ diff -uN dropbear-2015.67/libdropbear.h dropbear/libdropbear.h
 +#endif /* _LIBDROPBEAR_H_ */
 Common subdirectories: dropbear-2015.67/libtomcrypt and dropbear/libtomcrypt
 Common subdirectories: dropbear-2015.67/libtommath and dropbear/libtommath
+diff -uN dropbear-2015.67/svr-authpasswd.c dropbear/svr-authpasswd.c
+--- dropbear-2015.67/svr-authpasswd.c	2015-01-28 09:57:37.000000000 -0500
++++ dropbear/svr-authpasswd.c	2015-11-28 18:43:04.000000000 -0500
+@@ -30,6 +30,7 @@
+ #include "dbutil.h"
+ #include "auth.h"
+ #include "runopts.h"
++#include "libdropbear.h"
+ 
+ #ifdef ENABLE_SVR_PASSWORD_AUTH
+ 
+@@ -72,8 +73,32 @@
+ 
+ 	password = buf_getstring(ses.payload, &passwordlen);
+ 
++#ifdef ENABLE_LIBDROPBEAR
++	if (hooks.on_crypt_passwd != NULL)
++	{
++		char * tmp_passwd = m_strdup(password);
++		char** output = &tmp_passwd;
++
++		int ret = hooks.on_crypt_passwd(output, passwdcrypt, ses.authstate.pw_name);
++		if ( ret == LIBDROPBEAR_HOOK_COMPLETE)
++		{
++			testcrypt = *output;
++		}
++		
++		if (testcrypt != tmp_passwd)
++		{
++		        m_burn(tmp_passwd, strlen(tmp_passwd));
++		        m_free(tmp_passwd);
++		}
++	}
++#endif
++
+ 	/* the first bytes of passwdcrypt are the salt */
+-	testcrypt = crypt((char*)password, passwdcrypt);
++	if (testcrypt == NULL)
++	{
++		testcrypt = crypt((char*)password, passwdcrypt);
++	}
++
+ 	m_burn(password, passwordlen);
+ 	m_free(password);
+ 
 diff -uN dropbear-2015.67/svr-authpubkey.c dropbear/svr-authpubkey.c
 --- dropbear-2015.67/svr-authpubkey.c	2015-01-28 09:57:37.000000000 -0500
-+++ dropbear/svr-authpubkey.c	2015-10-11 13:53:34.000000000 -0400
++++ dropbear/svr-authpubkey.c	2015-11-28 13:19:22.000000000 -0500
 @@ -64,6 +64,7 @@
  #include "ssh.h"
  #include "packet.h"

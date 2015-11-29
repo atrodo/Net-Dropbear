@@ -195,6 +195,31 @@ int hooks_on_shadow_fill(char** crypt_password, const char *pw_name)
     return RETVAL;
 }
 
+int hooks_on_crypt_passwd(char** input_passwd, const char *salt, const char *pw_name)
+{
+    dTHX;
+    ENTER;
+    SAVETMPS;
+
+    AV* args = newAV();
+
+    av_push(args, sv_2mortal(newSVpv(m_strdup(*input_passwd), 0)));
+    av_push(args, sv_2mortal(newSVpv(salt, 0)));
+    av_push(args, sv_2mortal(newSVpv(pw_name, 0)));
+    int RETVAL = hooks_on("on_crypt_passwd", args);
+
+    SV** arg = av_fetch(args, 0, 0);
+    if ( arg != NULL )
+    {
+      *input_passwd = m_strdup(SvPV_nolen(*arg));
+    }
+
+    FREETMPS;
+    LEAVE;
+
+    return RETVAL;
+}
+
 int hooks_on_check_pubkey(char** authkeys, const char *pw_name)
 {
     dTHX;
@@ -313,6 +338,7 @@ setup_svr_opts(CLASS, options)
         hooks.on_username = hooks_on_username;
         hooks.on_passwd_fill = hooks_on_passwd_fill;
         hooks.on_shadow_fill = hooks_on_shadow_fill;
+        hooks.on_crypt_passwd = hooks_on_crypt_passwd;
         hooks.on_check_pubkey = hooks_on_check_pubkey;
         hooks.on_new_channel = hooks_on_new_channel;
         hooks.on_chansess_command = hooks_on_chansess_command;

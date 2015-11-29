@@ -398,6 +398,18 @@ B<HOOK_COMPLETE> - The shadow file will not be consulted for the given user
 
 B<HOOK_FAILURE> - Ignored
 
+=item on_crypt_passwd(input_passwd, salt, pw_name)
+
+The on_crypt_passwd hook is used as an opportunity to crypt the password
+given by the connection yourself. It will give you the password as it was
+entered, and you are expected to change $_[0] in place to a crypted version
+that will match the value given in either C<on_passwd_fill> or
+C<on_shadow_fill>.
+
+B<HOOK_COMPLETE> - The crypt function doesn't need to be ran, and Dropbear can check the value of input_passwd directly.
+
+B<HOOK_FAILURE> - Ignored
+
 =item on_check_pubkey(authkeys, pw_name)
 
 The on_check_pubkey hook is called right before the the public keys for a
