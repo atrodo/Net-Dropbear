@@ -2,6 +2,10 @@ Revision history for Net-Dropbear
 
 {{$NEXT}}
 
+0.05  2015-11-28 19:29:55 EST
+        * Add on_crypt_passwd to let users crypt the incoming password
+        * Improve testing diagnostics
+
 0.04  2015-11-06 22:38:15 EST
         * Drop the min perl requirement to 5.8.8
         * Use the c/cpp/ld flags from perl to compile dropbear

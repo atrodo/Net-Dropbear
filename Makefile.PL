@@ -29,7 +29,7 @@ my %WriteMakefileArgs = (
   'LICENSE' => 'artistic_2',
   'NAME' => 'Net::Dropbear',
   'MIN_PERL_VERSION' => '5.008008',
-  'VERSION' => '0.04',
+  'VERSION' => '0.05',
 
   test => { TESTS => "t/*.t" },
   INC => '-I. -Idropbear -Idropbear/libtomcrypt/src/headers',
