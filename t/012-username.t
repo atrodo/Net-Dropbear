@@ -59,14 +59,6 @@ needed_output(
   }
 );
 
-my @ssh_cmd = (
-  'ssh',
-  '-oUserKnownHostsFile=/dev/null',
-  '-oStrictHostKeyChecking=no',
-  '-oPasswordAuthentication=no',
-  "-p$port",
-);
-
 {
   my %ssh = ssh();
   my $pty = $ssh{pty};

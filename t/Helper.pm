@@ -6,6 +6,7 @@ use Net::Dropbear::SSHd;
 use Net::Dropbear::XS;
 use IPC::Open3;
 use Try::Tiny;
+use IO::Pty;
 
 our $planned = 0;
 our $port = int( rand(10000) + 1024 );
@@ -34,8 +35,7 @@ sub needed_output
   my %match = map { $_ => $needed{$_} } grep { $_ !~ m/^!/ } keys %needed;
   my %unmatch = map { $_ => $needed{$_} } grep { $_ =~ m/^!/ } keys %needed;
 
-#  use Data::Dumper;
-#  warn Data::Dumper::Dumper(\%match, \%unmatch);
+  my $had_error;
 
   try {
     local $SIG{ALRM} = sub { die; };
@@ -52,6 +52,7 @@ sub needed_output
         if ($line =~ m/^ \Q$re\E/xms)
         {
           ok(0, delete $unmatch{$key});
+          $had_error = 1;
         }
       }
       foreach my $key (keys %match)
@@ -71,12 +72,18 @@ sub needed_output
     foreach my $key (keys %match)
     {
       ok(0, $match{$key});
+      $had_error = 1;
     }
     foreach my $key (keys %unmatch)
     {
       ok(1, $unmatch{$key});
     }
   };
+
+  if ($had_error)
+  {
+    diag("Output Seen: " . join("\n #\t", split(/\n/, $result) ) );
+  }
 
   return $result;
 }

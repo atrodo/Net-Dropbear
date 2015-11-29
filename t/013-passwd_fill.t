@@ -71,21 +71,11 @@ needed_output(
   }
 );
 
-my @ssh_cmd = (
-  'ssh',
-  '-oUserKnownHostsFile=/dev/null',
-  '-oStrictHostKeyChecking=no',
-  '-oPasswordAuthentication=no',
-  "-p$port",
-);
-
 {
-  my $ssh_pid = open3(
-    '/dev/null', my $ssh_out, undef,
-    @ssh_cmd,    "$port\@localhost",
-  );
+  my %ssh = ssh();
+  my $pty = $ssh{pty};
 
-  needed_output(
+  my $output = needed_output(
     {
       $ok_str         => 'Got into the passwd hook',
       $not_forced_str => 'Did not force username',
@@ -94,19 +84,16 @@ my @ssh_cmd = (
     }
   );
 
+  kill( $ssh{pid} );
   note("SSH output");
-  note($_) while <$ssh_out>;
-
-  kill($ssh_pid);
+  note($_) while <$pty>;
 }
 
 {
-  my $ssh_pid = open3(
-    '/dev/null', my $ssh_out, undef,
-    @ssh_cmd,    "a$port\@localhost",
-  );
+  my %ssh = ssh(username => "a$port");
+  my $pty = $ssh{pty};
 
-  needed_output(
+  my $output = needed_output(
     {
       $ok_str     => 'Got into the passwd hook',
       $forced_str => 'Did force username',
@@ -115,19 +102,16 @@ my @ssh_cmd = (
     }
   );
 
+  kill( $ssh{pid} );
   note("SSH output");
-  note($_) while <$ssh_out>;
-
-  kill($ssh_pid);
+  note($_) while <$pty>;
 }
 
 {
-  my $ssh_pid = open3(
-    '/dev/null', my $ssh_out, undef,
-    @ssh_cmd,    "shell\@localhost",
-  );
+  my %ssh = ssh(username => 'shell');
+  my $pty = $ssh{pty};
 
-  needed_output(
+  my $output = needed_output(
     {
       $ok_str     => 'Got into the passwd hook',
       $forced_str => 'Did force username',
@@ -136,10 +120,9 @@ my @ssh_cmd = (
     }
   );
 
+  kill( $ssh{pid} );
   note("SSH output");
-  note($_) while <$ssh_out>;
-
-  kill($ssh_pid);
+  note($_) while <$pty>;
 }
 
 $sshd->stop;
