@@ -386,23 +386,34 @@ diff -uN dropbear-2015.67/svr-chansession.c dropbear/svr-chansession.c
 +
 +		if (csa.pid > 0 && svr_ses.lastexit.exitpid != csa.pid && waitpid(csa.pid, NULL, WNOHANG) < 0)
 +		{
-+			TRACE(("on_chansess_command: pid was invalid: %d", csa.pid));
++			dropbear_log(LOG_ERR, "on_chansess_command: pid was invalid: %d", csa.pid);
 +			return DROPBEAR_FAILURE;
 +		}
 +		if (csa.writefd != FD_CLOSED && fstat(csa.writefd, &fstats) < 0)
 +		{
-+			TRACE(("on_chansess_command: writefd was invalid: %d", csa.writefd));
++			dropbear_log(LOG_ERR, "on_chansess_command: writefd was invalid: %d: %s", csa.writefd, strerror(errno));
 +			return DROPBEAR_FAILURE;
 +		}
 +		if (csa.readfd != FD_CLOSED && fstat(csa.readfd, &fstats) < 0)
 +		{
-+			TRACE(("on_chansess_command: readfd was invalid: %d", csa.readfd));
++			dropbear_log(LOG_ERR, "on_chansess_command: readfd was invalid: %d: %s", csa.readfd, strerror(errno));
 +			return DROPBEAR_FAILURE;
 +		}
 +		if (csa.errfd != FD_CLOSED && fstat(csa.errfd, &fstats) < 0)
 +		{
-+			TRACE(("on_chansess_command: errfd was invalid: %d", csa.errfd));
++			dropbear_log(LOG_ERR, "on_chansess_command: errfd was invalid: %d: %s", csa.errfd, strerror(errno));
 +			return DROPBEAR_FAILURE;
++		}
++
++		/* If readfd == writefd, the polling gets confused */
++		if (csa.readfd == csa.writefd)
++		{
++			csa.readfd = dup(csa.writefd);
++			if (csa.readfd < 0)
++			{
++				dropbear_log(LOG_ERR, "on_chansess_command: could not dup fd %d: %s", csa.writefd, strerror(errno));
++				return DROPBEAR_FAILURE;
++			}
 +		}
 +
 +		chansess->cmd = csa.cmd;
