@@ -322,7 +322,26 @@ diff -uN dropbear-2015.67/svr-chansession.c dropbear/svr-chansession.c
  
  /* Handles sessions (either shells or programs) requested by the client */
  
-@@ -574,6 +575,13 @@
+@@ -76,7 +77,17 @@
+ 
+ static int sesscheckclose(struct Channel *channel) {
+ 	struct ChanSess *chansess = (struct ChanSess*)channel->typedata;
+-	TRACE(("sesscheckclose, pid is %d", chansess->exit.exitpid))
++	if (chansess->pid <= 0)
++	{
++		TRACE(("sesscheckclose, chldpid is %d", chansess->pid));
++		TRACE(("sesscheckclose, recv_eof is %d", channel->recv_eof));
++		if (channel->recv_eof)
++		{
++			 close(channel->readfd);
++		}
++		return channel->recv_eof == 1;
++	}
++	TRACE(("sesscheckclose, pid is %d", chansess->exit.exitpid));
+ 	return chansess->exit.exitpid != -1;
+ }
+ 
+@@ -574,6 +585,13 @@
  		return DROPBEAR_FAILURE;
  	}
  
@@ -336,7 +355,7 @@ diff -uN dropbear-2015.67/svr-chansession.c dropbear/svr-chansession.c
  	/* allocate the pty */
  	if (chansess->master != -1) {
  		dropbear_exit("Multiple pty requests");
-@@ -588,9 +596,6 @@
+@@ -588,9 +606,6 @@
  		dropbear_exit("Out of memory"); /* TODO disconnect */
  	}
  
@@ -346,7 +365,7 @@ diff -uN dropbear-2015.67/svr-chansession.c dropbear/svr-chansession.c
  	pty_setowner(pw, chansess->tty);
  
  	/* Set up the rows/col counts */
-@@ -669,6 +674,117 @@
+@@ -669,6 +684,117 @@
  		}
  	}
  	
