@@ -62,10 +62,8 @@ SELECT:
     {
       foreach my $fd (@fds)
       {
-        warn $fd;
         while ( my $line = $fd->getline )
         {
-          warn $fd;
           my $fileno = $fd->fileno;
           note("#$io#$fileno# $line");
 
