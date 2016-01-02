@@ -33,7 +33,7 @@ Jon Gentle E<lt>atrodo@cpan.orgE<gt>
 
 =head1 COPYRIGHT
 
-Copyright 2015- Jon Gentle
+Copyright 2015-2016 Jon Gentle
 
 =head1 LICENSE
 
