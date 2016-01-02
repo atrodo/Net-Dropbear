@@ -7,10 +7,11 @@ use Net::Dropbear::XS;
 use IPC::Open3;
 use Try::Tiny;
 use IO::Pty;
+use IO::Select;
 
 our $planned = 0;
-our $port = int( rand(10000) + 1024 );
-our $key_fh = File::Temp->new( template => "net_dropbear_sshd_XXXXXXXX" );
+our $port    = int( rand(10000) + 1024 );
+our $key_fh  = File::Temp->new( template => "net_dropbear_sshd_XXXXXXXX" );
 our $key_filename = $key_fh->filename;
 undef $key_fh;
 
@@ -22,67 +23,102 @@ our $sshd;
 
 chmod 0500, glob("$FindBin::Bin/test*");
 
+my $last_pty;
+$SIG{'CHLD'} = 'IGNORE';
+
 sub needed_output
 {
   my $needed = shift;
-  my $io = shift // $sshd->comm;
+  my $io     = shift // $sshd->comm;
   my %needed = %$needed;
 
   my $result = "";
 
   $planned += keys %needed;
 
-  my %match = map { $_ => $needed{$_} } grep { $_ !~ m/^!/ } keys %needed;
+  my %match   = map { $_ => $needed{$_} } grep { $_ !~ m/^!/ } keys %needed;
   my %unmatch = map { $_ => $needed{$_} } grep { $_ =~ m/^!/ } keys %needed;
 
   my $had_error;
 
-  try {
+  try
+  {
     local $SIG{ALRM} = sub { die; };
-    alarm 4;
-    while ( my $line = $io->getline )
+
+    my $s = IO::Select->new();
+    $s->add($io);
+    $io->blocking(0);
+
+    if ( defined $last_pty && $last_pty->opened )
     {
-      note($line);
-      $result .= $line;
-      chomp $line;
-      foreach my $key (keys %unmatch)
+      $s->add($last_pty);
+      $last_pty->blocking(0);
+    }
+
+    alarm 4;
+
+SELECT:
+    while ( my @fds = $s->can_read )
+    {
+      foreach my $fd (@fds)
       {
-        my $re = $key;
-        $re =~ s/^!//;
-        if ($line =~ m/^ \Q$re\E/xms)
+        warn $fd;
+        while ( my $line = $fd->getline )
         {
-          ok(0, delete $unmatch{$key});
-          $had_error = 1;
+          warn $fd;
+          my $fileno = $fd->fileno;
+          note("#$io#$fileno# $line");
+
+          next
+              if $fd ne $io;
+          $result .= $line;
+          chomp $line;
+          foreach my $key ( keys %unmatch )
+          {
+            my $re = $key;
+            $re =~ s/^!//;
+            if ( $line =~ m/^ \Q$re\E/xms )
+            {
+              ok( 0, delete $unmatch{$key} );
+              $had_error = 1;
+            }
+          }
+          foreach my $key ( keys %match )
+          {
+            if ( $line =~ m/^ \Q$key\E/xms )
+            {
+              ok( 1, delete $match{$key} );
+            }
+          }
         }
-      }
-      foreach my $key (keys %match)
-      {
-        if ($line =~ m/^ \Q$key\E/xms)
-        {
-          ok(1, delete $match{$key});
-        }
+
+        last SELECT if keys(%match) == 0;
       }
 
-      last if keys(%match) == 0;
+      alarm 4;
     }
     alarm 0;
-  } catch {
+  }
+  catch
+  {
     note($_);
-  } finally {
-    foreach my $key (keys %match)
+  }
+  finally
+  {
+    foreach my $key ( keys %match )
     {
-      ok(0, $match{$key});
+      ok( 0, $match{$key} );
       $had_error = 1;
     }
-    foreach my $key (keys %unmatch)
+    foreach my $key ( keys %unmatch )
     {
-      ok(1, $unmatch{$key});
+      ok( 1, $unmatch{$key} );
     }
   };
 
   if ($had_error)
   {
-    diag("Output Seen: " . join("\n #\t", split(/\n/, $result) ) );
+    diag( "Output Seen: " . join( "\n #\t", split( /\n/, $result ) ) );
   }
 
   return $result;
@@ -103,38 +139,39 @@ sub ssh
     '-oStrictHostKeyChecking=no',
     $password ? () : ('-oPasswordAuthentication=no'),
     '-oNumberOfPasswordPrompts=1',
-    $key ? ("-i", $key) : (),
+    $key ? ( "-i", $key ) : (),
     "-p$port",
     '-T',
+
     #'-v',
   );
 
-  my $pty = IO::Pty->new;
+  my $pty     = IO::Pty->new;
   my $ssh_pid = fork;
 
-  if (!$ssh_pid)
+  if ( !$ssh_pid )
   {
     $pty->make_slave_controlling_terminal();
     my $slave = $pty->slave();
     close $pty;
-    open(STDIN,"<&". $slave->fileno());
-    open(STDOUT,">&". $slave->fileno());
-    open(STDERR,">&". $slave->fileno());
+    open( STDIN,  "<&" . $slave->fileno() );
+    open( STDOUT, ">&" . $slave->fileno() );
+    open( STDERR, ">&" . $slave->fileno() );
 
-    exec( @ssh_cmd, "$username\@localhost", $cmd ? $cmd : 'false');
+    exec( @ssh_cmd, "$username\@localhost", $cmd ? $cmd : 'false' );
   }
 
   $pty->close_slave();
   $pty->set_raw();
 
-  if (defined $password)
+  if ( defined $password )
   {
     my $buff;
     note("Sending password");
-    while ($pty->sysread($buff, 1024))
+    while ( $pty->sysread( $buff, 1024 ) )
     {
       note("SSH output: $buff");
-      if ($buff =~ m/password:/)
+      if ( $buff =~ m/password:/ )
       {
         $pty->say($password);
         last;
@@ -142,6 +179,7 @@ sub ssh
     }
   }
 
+  $last_pty = $pty;
   return (
     pty => $pty,
     pid => $ssh_pid,

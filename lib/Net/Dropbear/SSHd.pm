@@ -8,6 +8,7 @@ use Child;
 
 use autodie;
 use Carp;
+use Try::Tiny;
 use Moo;
 use Types::Standard qw/ArrayRef HashRef GlobRef Str Int Bool InstanceOf/;
 
@@ -122,7 +123,7 @@ sub wait
   my $self = shift;
   if ($self->is_running)
   {
-    $self->child->wait;
+    try { $self->child->wait };
   }
 }
 
