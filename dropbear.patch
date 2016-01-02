@@ -1,3 +1,5 @@
+# ( cd dropbear/ ; make distclean ; rm config.log config.status ) ; ( cd dropbear-2015.67 ; rm .hg* .tra* ; find * -exec touch -r {} ../dropbear/{} \; )
+#  diff -uN dropbear-2015.67/ dropbear/ | grep -v '^Binary files' > dropbear.patch
 diff -uN dropbear-2015.67/common-channel.c dropbear/common-channel.c
 --- dropbear-2015.67/common-channel.c	2015-01-28 09:57:36.000000000 -0500
 +++ dropbear/common-channel.c	2015-01-28 09:57:36.000000000 -0500
