@@ -9,3 +9,6 @@ MYMETA.*
 *.a
 *.sw[po]
 dropbear-2015.67/
+dropbear[.-]*
+tmp/
+blib/
