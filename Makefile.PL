@@ -29,7 +29,7 @@ my %WriteMakefileArgs = (
   'LICENSE' => 'artistic_2',
   'NAME' => 'Net::Dropbear',
   'MIN_PERL_VERSION' => '5.008008',
-  'VERSION' => '0.06',
+  'VERSION' => '0.07',
 
   test => { TESTS => "t/*.t" },
   INC => '-I. -Idropbear -Idropbear/libtomcrypt/src/headers',
@@ -43,7 +43,8 @@ my %WriteMakefileArgs = (
     'Child' => '0',
     'Moo' => '2.000',
     'Try::Tiny' => '0',
-    'Types::Standard' => '0'
+    'Types::Standard' => '0',
+    'autodie' => '0'
   },
   'TEST_REQUIRES' => {
     'IO::Pty' => '0',
@@ -63,7 +64,8 @@ my %FallbackPrereqs = (
     'Child' => '0',
     'Moo' => '2.000',
     'Try::Tiny' => '0',
-    'Types::Standard' => '0'
+    'Types::Standard' => '0',
+    'autodie' => '0'
   },
 );
 

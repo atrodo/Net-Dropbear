@@ -15,7 +15,7 @@ Jon Gentle &lt;atrodo@cpan.org>
 
 # COPYRIGHT
 
-Copyright 2015- Jon Gentle
+Copyright 2015-2016 Jon Gentle
 
 # LICENSE
 

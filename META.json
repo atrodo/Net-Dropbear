@@ -41,6 +41,7 @@
             "Moo" : "2.000",
             "Try::Tiny" : "0",
             "Types::Standard" : "0",
+            "autodie" : "0",
             "perl" : "5.008008"
          }
       },
@@ -63,7 +64,7 @@
          "web" : "https://github.com/atrodo/Net-Dropbear"
       }
    },
-   "version" : "0.06",
+   "version" : "0.07",
    "x_contributors" : [
       "Jon Gentle <atrodo@atrodo.org>"
    ]

@@ -2,6 +2,10 @@ Revision history for Net-Dropbear
 
 {{$NEXT}}
 
+0.07  2016-01-02 00:55:23 EST
+        * Improve the tests by reading from all the active file descriptors
+        * Fix the handling of channels when there is no child process
+
 0.06  2015-11-28 19:34:41 EST
         * Add on_crypt_passwd to let users crypt the incoming password
         * Improve testing diagnostics
