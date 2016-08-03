@@ -58,10 +58,16 @@ sub needed_output
     alarm 4;
 
 SELECT:
-    while ( my @fds = $s->can_read )
+    while ( my @fds = $s->can_read(4) )
     {
       foreach my $fd (@fds)
       {
+        if ($fd->eof)
+        {
+          $s->remove($fd);
+          last;
+        }
+
         while ( my $line = $fd->getline )
         {
           my $fileno = $fd->fileno;
