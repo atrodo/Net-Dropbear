@@ -452,7 +452,7 @@ pw_dir(THIS, __value = NO_INIT)
     PROTOTYPE: $;$
     CODE:
         if (items > 1)
-            THIS->pw_dir = __value;
+            THIS->pw_dir = m_strdup(__value);
         RETVAL = THIS->pw_dir;
     OUTPUT:
         RETVAL
@@ -464,7 +464,7 @@ pw_shell(THIS, __value = NO_INIT)
     PROTOTYPE: $;$
     CODE:
         if (items > 1)
-            THIS->pw_shell = __value;
+            THIS->pw_shell = m_strdup(__value);
         RETVAL = THIS->pw_shell;
     OUTPUT:
         RETVAL
@@ -476,7 +476,7 @@ pw_name(THIS, __value = NO_INIT)
     PROTOTYPE: $;$
     CODE:
         if (items > 1)
-            THIS->pw_name = __value;
+            THIS->pw_name = m_strdup(__value);
         RETVAL = THIS->pw_name;
     OUTPUT:
         RETVAL
@@ -488,7 +488,7 @@ pw_passwd(THIS, __value = NO_INIT)
     PROTOTYPE: $;$
     CODE:
         if (items > 1)
-            THIS->pw_passwd = __value;
+            THIS->pw_passwd = m_strdup(__value);
         RETVAL = THIS->pw_passwd;
     OUTPUT:
         RETVAL
