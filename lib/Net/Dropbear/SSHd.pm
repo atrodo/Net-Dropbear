@@ -62,6 +62,8 @@ has comm => (
   isa => GlobRef,
 );
 
+my $tell_parent;
+
 sub is_running
 {
   my $self = shift;
@@ -86,8 +88,15 @@ sub run
     my $parent = shift;
     $0 .= " [Net::Dropbear Child]";
 
-    $parent_comm->close;
     $self->_set_comm($child_comm);
+
+    $tell_parent = sub
+    {
+      # Tell the parent we're ready by writing to the socket we normally read
+      # from.
+      $parent_comm->print("\n");
+      $parent_comm->close;
+    };
 
     require Net::Dropbear::XS;
 
@@ -103,8 +112,11 @@ sub run
   });
 
   $self->_set_child($child->start);
-  $child_comm->close;
   $self->_set_comm($parent_comm);
+
+  # Wait for child to come up by reading from the socket we normally close
+  $child_comm->getline;
+  $child_comm->close;
 
   return;
 }
@@ -131,6 +143,12 @@ sub auto_hook
 {
   my $self = shift;
   my $hook = shift;
+
+  if ($hook eq 'on_start' && ref $tell_parent eq 'CODE')
+  {
+    $tell_parent->();
+    undef $tell_parent;
+  }
 
   if (exists $self->hooks->{$hook})
   {
