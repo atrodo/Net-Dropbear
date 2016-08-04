@@ -138,7 +138,7 @@ static void svr_ensure_hostkey() {
 			break;
 #endif
 		default:
-			(void)0;
+			dropbear_assert(0);
 	}
 
 	if (readhostkey(fn, svr_opts.hostkey, &type) == DROPBEAR_SUCCESS) {
@@ -247,7 +247,7 @@ static void send_msg_kexdh_reply(mp_int *dh_e, buffer *ecdh_qs) {
 			{
 			struct kex_curve25519_param *param = gen_kexcurve25519_param();
 			kexcurve25519_comb_key(param, ecdh_qs, svr_opts.hostkey);
-			buf_putstring(ses.writepayload, param->pub, CURVE25519_LEN);
+			buf_putstring(ses.writepayload, (const char*)param->pub, CURVE25519_LEN);
 			free_kexcurve25519_param(param);
 			}
 #endif

@@ -315,7 +315,7 @@ setup_svr_opts(CLASS, options)
         debug_trace             = _get_bool(options, "debug");
 #endif
         svr_opts.forkbg         = _get_bool(options, "forkbg");
-        svr_opts.usingsyslog    = _get_bool(options, "usingsyslog");
+        opts.usingsyslog        = _get_bool(options, "usingsyslog");
         svr_opts.inetdmode      = _get_bool(options, "inetdmode");
         svr_opts.norootlogin    = _get_bool(options, "norootlogin");
         svr_opts.noauthpass     = _get_bool(options, "noauthpass");
