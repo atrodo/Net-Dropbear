@@ -469,7 +469,7 @@ B<HOOK_FAILURE> - The command session will behave as though the command had vail
 
 =head2 run
 
-Call C<$sshd->run> to start Dropbear.
+Call C<$sshd-E<gt>run> to start Dropbear.
 
 =head2 child
 
