@@ -2,7 +2,7 @@ package Net::Dropbear::SSHd;
 
 use strict;
 use v5.8;
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 use Child;
 

@@ -6,8 +6,6 @@ use 5.8.8;
 use ExtUtils::MakeMaker 6.30;
 use Config;
 
-my $make = $^O eq 'freebsd' ? 'gmake' : 'make';
-
 eval { build_dropbear() };
 if ($@)
 {
@@ -17,9 +15,9 @@ if ($@)
 }
 
 my $objs
-    = qx[$make -s -f printvar.mak -f dropbear/Makefile print-dropbearobjs print-LIBTOM_LIBS 2>/dev/null];
+    = qx[make -s -f printvar.mak -f dropbear/Makefile print-dropbearobjs print-LIBTOM_LIBS 2>/dev/null];
 my $libs
-    = qx[$make -s -f printvar.mak -f dropbear/Makefile print-LIBS 2>/dev/null];
+    = qx[make -s -f printvar.mak -f dropbear/Makefile print-LIBS 2>/dev/null];
 
 $objs = join " ", map {"dropbear/$_"} split( /\s+/xms, $objs );
 $libs .= ' -lcrypt';
@@ -31,7 +29,7 @@ my %WriteMakefileArgs = (
   'LICENSE' => 'artistic_2',
   'NAME' => 'Net::Dropbear',
   'MIN_PERL_VERSION' => '5.008008',
-  'VERSION' => '0.07',
+  'VERSION' => '0.08',
 
   test => { TESTS => "t/*.t" },
   INC => '-I. -Idropbear -Idropbear/libtomcrypt/src/headers',
@@ -107,13 +105,13 @@ sub build_dropbear
   return
       if -e "$db_src/dropbear";
 
-  run("cd $db_src && $make distclean")
+  run("cd $db_src && make distclean")
       if -f "$db_src/Makefile";
 
   run("cd $db_src && patch -N -i ../dropbear.patch")
       if !-f "$db_src/libdropbear.h";
 
   run("cd $db_src && ./configure");
-  run("cd $db_src && $make");
+  run("cd $db_src && make");
 }
 

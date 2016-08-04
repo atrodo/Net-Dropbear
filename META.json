@@ -64,9 +64,10 @@
          "web" : "https://github.com/atrodo/Net-Dropbear"
       }
    },
-   "version" : "0.07",
+   "version" : "0.08",
    "x_contributors" : [
-      "Jon Gentle <atrodo@atrodo.org>"
+      "Jon Gentle <atrodo@atrodo.org>",
+      "Slaven Rezic <slaven@rezic.de>"
    ]
 }
 

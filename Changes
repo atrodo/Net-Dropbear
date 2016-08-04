@@ -2,6 +2,12 @@ Revision history for Net-Dropbear
 
 {{$NEXT}}
 
+0.08  2016-08-04 01:34:49 EDT
+        * Update to Dropbear 2016.74
+        * Use gmake on FreeBSD
+        * Fix a memory corruption bug with auth_state (gh1)
+        * Add synchronization so $sshd->run doesn't return until the child is up
+
 0.07  2016-01-02 00:55:23 EST
         * Improve the tests by reading from all the active file descriptors
         * Fix the handling of channels when there is no child process
