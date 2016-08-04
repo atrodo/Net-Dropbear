@@ -25,14 +25,13 @@ my $forced_str     = "Forcing username";
 my @auth_fields = qw/pw_dir pw_shell pw_name pw_passwd/;
 my $teststr = '/tmp';
 
-package asdf
-{
+package asdf;
   use Moo;
   foreach my $field (@auth_fields)
   {
     has $field => ( is => 'ro', default => "$field:$teststr" );
   }
-};
+package main;
 
 my $self = asdf->new();
 use Data::Dumper;
