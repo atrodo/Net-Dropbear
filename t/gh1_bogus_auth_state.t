@@ -75,7 +75,7 @@ $sshd = Net::Dropbear::SSHd->new(
 $sshd->run;
 
 needed_output(
-  {
+  undef, {
     $start_str => 'Dropbear started',
   }
 );
@@ -92,16 +92,14 @@ needed_output(
         $tests{"auth$str"} = "Does not corrupt $field in auth_state";
       }
 
-  my $output = needed_output(
-    {
+  needed_output(
+    undef, {
       %tests,
       $ok_str         => 'Got into the passwd hook',
     }
   );
 
   kill( $ssh{pid} );
-  note("SSH output");
-  note($_) while <$pty>;
 }
 
 $sshd->stop;

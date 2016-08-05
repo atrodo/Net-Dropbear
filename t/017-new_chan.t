@@ -58,7 +58,7 @@ $sshd = Net::Dropbear::SSHd->new(
 $sshd->run;
 
 needed_output(
-  {
+  undef, {
     $start_str => 'Dropbear started',
   }
 );
@@ -68,21 +68,16 @@ needed_output(
   my $pty = $ssh{pty};
 
   needed_output(
-    {
+    undef, {
       $ok_str => 'Got into the new channel hook',
       'New channel: session' => 'Can request a new channel',
+    },
+    $pty, {
+      'channel 0: open failed: administratively prohibited:' => 'Can deny a new channel',
     }
   );
 
-  needed_output(
-    {
-      'channel 0: open failed: administratively prohibited:' => 'Can deny a new channel',
-    }, $pty
-  );
-
   kill( $ssh{pid} );
-  note("SSH output");
-  note($_) while <$pty>;
 }
 
 $sshd->stop;

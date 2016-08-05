@@ -70,7 +70,7 @@ $sshd = Net::Dropbear::SSHd->new(
 $sshd->run;
 
 needed_output(
-  {
+  undef, {
     $start_str => 'Dropbear started',
   }
 );
@@ -80,20 +80,15 @@ needed_output(
   my $pty = $ssh{pty};
 
   needed_output(
-    {
+    undef, {
       $ok_str => 'Got into the channel command hook',
+    },
+    $pty, {
+      $cmd => 'Got the output from the child command',
     }
   );
 
-  needed_output(
-    {
-      $cmd => 'Got the output from the child command',
-    }, $pty
-  );
-
   kill( $ssh{pid} );
-  note("SSH output");
-
 }
 
 $sshd->stop;

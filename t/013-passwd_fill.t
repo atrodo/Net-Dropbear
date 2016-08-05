@@ -66,7 +66,7 @@ $sshd = Net::Dropbear::SSHd->new(
 $sshd->run;
 
 needed_output(
-  {
+  undef, {
     $start_str => 'Dropbear started',
   }
 );
@@ -75,8 +75,8 @@ needed_output(
   my %ssh = ssh();
   my $pty = $ssh{pty};
 
-  my $output = needed_output(
-    {
+  needed_output(
+    undef, {
       $ok_str         => 'Got into the passwd hook',
       $not_forced_str => 'Did not force username',
       "Exit before auth (user '$port', 0 fails)" =>
@@ -85,16 +85,14 @@ needed_output(
   );
 
   kill( $ssh{pid} );
-  note("SSH output");
-  note($_) while <$pty>;
 }
 
 {
   my %ssh = ssh(username => "a$port");
   my $pty = $ssh{pty};
 
-  my $output = needed_output(
-    {
+  needed_output(
+    undef, {
       $ok_str     => 'Got into the passwd hook',
       $forced_str => 'Did force username',
       "Exit before auth (user '$port', 0 fails)" =>
@@ -103,16 +101,14 @@ needed_output(
   );
 
   kill( $ssh{pid} );
-  note("SSH output");
-  note($_) while <$pty>;
 }
 
 {
   my %ssh = ssh(username => 'shell');
   my $pty = $ssh{pty};
 
-  my $output = needed_output(
-    {
+  needed_output(
+    undef, {
       $ok_str     => 'Got into the passwd hook',
       $forced_str => 'Did force username',
       "User '$port' has invalid shell, rejected" =>
@@ -121,8 +117,6 @@ needed_output(
   );
 
   kill( $ssh{pid} );
-  note("SSH output");
-  note($_) while <$pty>;
 }
 
 $sshd->stop;

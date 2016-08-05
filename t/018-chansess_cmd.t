@@ -72,7 +72,7 @@ $sshd = Net::Dropbear::SSHd->new(
 $sshd->run;
 
 needed_output(
-  {
+  undef, {
     $start_str => 'Dropbear started',
   }
 );
@@ -82,15 +82,13 @@ needed_output(
   my $pty = $ssh{pty};
 
   needed_output(
-    {
+    undef, {
       $ok_str => 'Got into the channel command hook',
       'cmd: false' => 'Ran the command false',
     }
   );
 
   kill( $ssh{pid} );
-  note("SSH output");
-  note($_) while <$pty>;
 }
 
 {
@@ -98,7 +96,7 @@ needed_output(
   my $pty = $ssh{pty};
 
   needed_output(
-    {
+    undef, {
       $ok_str => 'Got into the channel command hook',
       'cmd: false' => 'Can override the command',
       '!sh: 1: ~false: not found' => 'The bad command never runs',
@@ -106,8 +104,6 @@ needed_output(
   );
 
   kill( $ssh{pid} );
-  note("SSH output");
-  note($_) while <$pty>;
 }
 
 {
@@ -116,22 +112,17 @@ needed_output(
   my $pty = $ssh{pty};
 
   needed_output(
-    {
+    undef, {
       $ok_str => 'Got into the channel command hook',
       "cmd: $cmd" => "Cmd is seen as '$cmd'",
+    },
+    $pty, {
+      'exec request failed' => 'The disallowed command does not run',
+      '!asdf' => 'The disallowed command does not produce output',
     }
   );
 
   kill( $ssh{pid} );
-  note("SSH output");
-
-  needed_output(
-    {
-      'exec request failed' => 'The disallowed command does not run',
-      '!asdf' => 'The disallowed command does not produce output',
-    }, $pty
-  );
-  note($_) while <$pty>;
 }
 
 $sshd->stop;

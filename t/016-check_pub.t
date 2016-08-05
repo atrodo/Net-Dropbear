@@ -52,7 +52,7 @@ $sshd = Net::Dropbear::SSHd->new(
 $sshd->run;
 
 needed_output(
-  {
+  undef, {
     $start_str => 'Dropbear started',
   }
 );
@@ -62,7 +62,7 @@ needed_output(
   my $pty = $ssh{pty};
 
   needed_output(
-    {
+    undef, {
       $ok_str => 'Got into the passwd hook',
       "Pubkey auth succeeded for '$port' with key" =>
           'Can login with public key auth',
@@ -70,8 +70,6 @@ needed_output(
   );
 
   kill( $ssh{pid} );
-  note("SSH output");
-  note($_) while <$pty>;
 }
 
 {
@@ -79,23 +77,16 @@ needed_output(
   my $pty = $ssh{pty};
 
   needed_output(
-    {
+    undef, {
       $ok_str => 'Got into the passwd hook',
+    },
+    $pty, {
+      'Permission denied (publickey,password).' =>
+          'A unusable key is unusable',
     }
   );
 
-  needed_output(
-    {
-      'Permission denied (publickey,password).' =>
-          'A unusable key is unusable',
-    },
-    $pty
-  );
-
   kill( $ssh{pid} );
-  note("SSH output");
-
-  note($_) while <$pty>;
 }
 
 $sshd->stop;

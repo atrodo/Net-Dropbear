@@ -28,33 +28,45 @@ $SIG{'CHLD'} = 'IGNORE';
 
 sub needed_output
 {
-  my $needed = shift;
-  my $io     = shift // $sshd->comm;
-  my %needed = %$needed;
+  my %test_map;
+
+  my $s = IO::Select->new();
+
+  while (@_)
+  {
+    my $io     = shift // $sshd->comm;
+    my $needed = shift;
+
+    my %needed = %$needed;
+
+    $planned += keys %needed;
+
+    my %match   = map { $_ => $needed{$_} } grep { $_ !~ m/^!/ } keys %needed;
+    my %unmatch = map { $_ => $needed{$_} } grep { $_ =~ m/^!/ } keys %needed;
+
+    $s->add($io);
+    $io->blocking(0);
+
+    $test_map{$io} = {
+      match => \%match,
+      unmatch => \%unmatch,
+    };
+  }
 
   my $result = "";
-
-  $planned += keys %needed;
-
-  my %match   = map { $_ => $needed{$_} } grep { $_ !~ m/^!/ } keys %needed;
-  my %unmatch = map { $_ => $needed{$_} } grep { $_ =~ m/^!/ } keys %needed;
-
   my $had_error;
 
   try
   {
     local $SIG{ALRM} = sub { die; };
 
-    my $s = IO::Select->new();
-    $s->add($io);
-    $io->blocking(0);
-
-    if ( defined $last_pty && $last_pty->opened )
+    if ( defined $last_pty && $last_pty->opened && !exists $test_map{$last_pty})
     {
       $s->add($last_pty);
       $last_pty->blocking(0);
     }
 
+    sleep 4;
     alarm 4;
 
 SELECT:
@@ -62,41 +74,59 @@ SELECT:
     {
       foreach my $fd (@fds)
       {
-        if ($fd->eof)
+        my $fileno = $fd->fileno;
+
+        if (!defined $test_map{$fd})
         {
-          $s->remove($fd);
-          last;
+          while ( my $line = $fd->getline )
+          {
+            note(" #$fd#$fileno# $line");
+          }
+          if ($fd->eof)
+          {
+            $s->remove($fd);
+          }
+          next;
         }
+
+        my $io = $test_map{$fd};
+        my $match = $io->{match};
+        my $unmatch = $io->{unmatch};
 
         while ( my $line = $fd->getline )
         {
-          my $fileno = $fd->fileno;
-          note("#$io#$fileno# $line");
+          note(" #$fd#$fileno# $line");
 
-          next
-              if $fd ne $io;
           $result .= $line;
           chomp $line;
-          foreach my $key ( keys %unmatch )
+          foreach my $key ( keys %$unmatch )
           {
             my $re = $key;
             $re =~ s/^!//;
             if ( $line =~ m/^ \Q$re\E/xms )
             {
-              ok( 0, delete $unmatch{$key} );
+              ok( 0, delete $unmatch->{$key} );
               $had_error = 1;
             }
           }
-          foreach my $key ( keys %match )
+          foreach my $key ( keys %$match )
           {
             if ( $line =~ m/^ \Q$key\E/xms )
             {
-              ok( 1, delete $match{$key} );
+              ok( 1, delete $match->{$key} );
             }
           }
         }
 
-        last SELECT if keys(%match) == 0;
+        if (keys(%$match) == 0)
+        {
+          $s->remove($fd);
+        }
+
+        if ($fd->eof)
+        {
+          $s->remove($fd);
+        }
       }
 
       alarm 4;
@@ -109,14 +139,19 @@ SELECT:
   }
   finally
   {
-    foreach my $key ( keys %match )
+    foreach my $io ( values %test_map )
     {
-      ok( 0, $match{$key} );
-      $had_error = 1;
-    }
-    foreach my $key ( keys %unmatch )
-    {
-      ok( 1, $unmatch{$key} );
+      my $match = $io->{match};
+      my $unmatch = $io->{unmatch};
+      foreach my $key ( keys %$match )
+      {
+        ok( 0, $match->{$key} );
+        $had_error = 1;
+      }
+      foreach my $key ( keys %$unmatch )
+      {
+        ok( 1, $unmatch->{$key} );
+      }
     }
   };
 

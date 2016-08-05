@@ -41,7 +41,7 @@ $sshd = Net::Dropbear::SSHd->new(
 $sshd->run;
 
 needed_output(
-  {
+  undef, {
     $start_str => 'Saw the startup of Dropbear',
   }
 );
@@ -51,14 +51,12 @@ needed_output(
   my $pty = $ssh{pty};
 
   needed_output(
-    {
+    undef, {
       'Login attempt for nonexistent user' => 'Got output from logging',
     }
   );
 
   kill( $ssh{pid} );
-  note("SSH output");
-  note($_) while <$pty>;
 }
 
 $sshd->stop;

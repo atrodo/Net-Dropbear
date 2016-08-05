@@ -53,7 +53,7 @@ $sshd = Net::Dropbear::SSHd->new(
 $sshd->run;
 
 needed_output(
-  {
+  undef, {
     $start_str => 'Dropbear started',
   }
 );
@@ -63,7 +63,7 @@ needed_output(
   my $pty = $ssh{pty};
 
   needed_output(
-    {
+    undef, {
       $ok_str         => 'Got into the passwd hook',
       "Password auth succeeded for '$port' from" =>
           'Can login with password auth',
@@ -71,8 +71,6 @@ needed_output(
   );
 
   kill($ssh{pid});
-  note("SSH output");
-  note($_) while <$pty>;
 }
 
 {
@@ -80,7 +78,7 @@ needed_output(
   my $pty = $ssh{pty};
 
   needed_output(
-    {
+    undef, {
       $ok_str         => 'Got into the passwd hook',
       "Bad password attempt for '$port' from" =>
           'Bad passwords still do not work',
@@ -88,8 +86,6 @@ needed_output(
   );
 
   kill($ssh{pid});
-  note("SSH output");
-  note($_) while <$pty>;
 }
 
 $sshd->stop;

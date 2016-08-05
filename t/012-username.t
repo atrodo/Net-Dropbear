@@ -54,7 +54,7 @@ $sshd = Net::Dropbear::SSHd->new(
 $sshd->run;
 
 needed_output(
-  {
+  undef, {
     $start_str => 'Dropbear started',
   }
 );
@@ -63,8 +63,8 @@ needed_output(
   my %ssh = ssh();
   my $pty = $ssh{pty};
 
-  my $output = needed_output(
-    {
+  needed_output(
+    undef, {
       $ok_str            => 'Got into the username hook',
       'Exit before auth' => 'SSH quit with a good username',
       "!$nok_str" => 'Did not enter on_passwd_fill',
@@ -81,7 +81,7 @@ needed_output(
   my $pty = $ssh{pty};
 
   needed_output(
-    {
+    undef, {
       $ok_str => 'Got into the username hook',
       'Login attempt for nonexistent user' => 'Incorrect username causes failure',
       "!$nok_str" => 'Did not enter on_passwd_fill',
