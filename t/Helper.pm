@@ -66,7 +66,6 @@ sub needed_output
       $last_pty->blocking(0);
     }
 
-    sleep 4;
     alarm 4;
 
 SELECT:
@@ -84,6 +83,7 @@ SELECT:
           }
           if ($fd->eof)
           {
+            note(" $fd removed");
             $s->remove($fd);
           }
           next;
@@ -120,11 +120,13 @@ SELECT:
 
         if (keys(%$match) == 0)
         {
+          note(" $fd removed matched");
           $s->remove($fd);
         }
 
-        if ($fd->eof)
+        if (!$fd->opened)
         {
+          note(" $fd removed eof");
           $s->remove($fd);
         }
       }
