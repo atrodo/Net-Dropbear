@@ -2,7 +2,7 @@ package Net::Dropbear::SSH;
 
 use strict;
 use v5.8;
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 1;
 __END__
