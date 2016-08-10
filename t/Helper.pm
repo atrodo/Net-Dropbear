@@ -1,6 +1,7 @@
 use strict;
 use Test::More;
 use File::Temp ();
+use List::Util qw/reduce/;
 
 use Net::Dropbear::SSHd;
 use Net::Dropbear::XS;
@@ -81,11 +82,6 @@ SELECT:
           {
             note(" #$fd#$fileno# $line");
           }
-          if ($fd->eof)
-          {
-            note(" $fd removed");
-            $s->remove($fd);
-          }
           next;
         }
 
@@ -117,18 +113,11 @@ SELECT:
             }
           }
         }
+      }
 
-        if (keys(%$match) == 0)
-        {
-          note(" $fd removed matched");
-          $s->remove($fd);
-        }
-
-        if (!$fd->opened)
-        {
-          note(" $fd removed eof");
-          $s->remove($fd);
-        }
+      if ( ( reduce { $a + keys %{ $b->{match} } } 0, values %test_map ) == 0 )
+      {
+        last SELECT;
       }
 
       alarm 4;
