@@ -311,6 +311,11 @@ setup_svr_opts(CLASS, options)
     PROTOTYPE: $$
     CODE:
         dropbear_init();
+
+        /* Always clear the default options */
+        svr_opts.ports[0] = 0;
+        m_free(svr_opts.addresses[0]);
+        svr_opts.portcount = 0;
 #ifdef DEBUG_TRACE
         debug_trace             = _get_bool(options, "debug");
 #endif
