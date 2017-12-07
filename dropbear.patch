@@ -573,7 +573,32 @@ diff -uN dropbear-2016.74/svr-runopts.c dropbear/svr-runopts.c
  
  svr_runopts svr_opts; /* GLOBAL */
  
-@@ -556,3 +557,17 @@
+@@ -488,6 +489,13 @@
+ 		m_free(hostkey_file);
+ 	}
+ 
++#ifdef ENABLE_LIBDROPBEAR
++	/* Don't load any host keys if we're not root */
++	uid_t uid=getuid(), euid=geteuid();
++	if (uid<=0 || uid!=euid)
++	{
++#endif
++
+ #ifdef DROPBEAR_RSA
+ 	loadhostkey(RSA_PRIV_FILENAME, 0);
+ #endif
+@@ -500,6 +508,10 @@
+ 	loadhostkey(ECDSA_PRIV_FILENAME, 0);
+ #endif
+ 
++#ifdef ENABLE_LIBDROPBEAR
++	}
++#endif
++
+ #ifdef DROPBEAR_DELAY_HOSTKEY
+ 	if (svr_opts.delay_hostkey) {
+ 		disable_unset_keys = 0;
+@@ -556,3 +568,17 @@
  		dropbear_exit("No hostkeys available. 'dropbear -R' may be useful or run dropbearkey.");
  	}
  }
