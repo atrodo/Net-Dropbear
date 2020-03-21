@@ -72,6 +72,7 @@ sub needed_output
 SELECT:
     while ( my @fds = $s->can_read(4) )
     {
+      my $had_output;
       foreach my $fd (@fds)
       {
         my $fileno = $fd->fileno;
@@ -81,6 +82,7 @@ SELECT:
           while ( my $line = $fd->getline )
           {
             note(" #$fd#$fileno# $line");
+            $had_output = 1;
           }
           next;
         }
@@ -92,6 +94,7 @@ SELECT:
         while ( my $line = $fd->getline )
         {
           note(" #$fd#$fileno# $line");
+          $had_output = 1;
 
           $result .= $line;
           chomp $line;
@@ -120,7 +123,8 @@ SELECT:
         last SELECT;
       }
 
-      alarm 4;
+      alarm 4
+        if $had_output;
     }
     alarm 0;
   }
