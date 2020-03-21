@@ -110,7 +110,10 @@ SELECT:
           }
           foreach my $key ( keys %$match )
           {
-            if ( $line =~ m/^ \Q$key\E/xms )
+            my $re = $key;
+            my $unanchored = $re =~ s[^/][];
+            $re = $unanchored ? qr/ \Q$re\E /xms : qr/^ \Q$re\E /xms;
+            if ( $line =~ $re )
             {
               ok( 1, delete $match->{$key} );
             }
