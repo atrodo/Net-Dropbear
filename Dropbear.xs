@@ -291,6 +291,9 @@ BOOT:
     newCONSTSUB(stash, "HOOK_COMPLETE", newSViv (LIBDROPBEAR_HOOK_COMPLETE));
     newCONSTSUB(stash, "HOOK_CONTINUE", newSViv (LIBDROPBEAR_HOOK_CONTINUE));
     newCONSTSUB(stash, "HOOK_FAILURE",  newSViv (LIBDROPBEAR_HOOK_FAILURE));
+
+    seedrandom();
+    crypto_init();
 }
 
 void
