@@ -18,6 +18,8 @@
 typedef struct dropbear_chansess_accept * Net__Dropbear__XS__SessionAccept;
 typedef struct AuthState * Net__Dropbear__XS__AuthState;
 
+struct dropbear_hooks hooks; /* GLOBAL */
+
 int _get_bool(SV *self, char *method)
 {
         int count;

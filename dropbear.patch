@@ -1,5 +1,27 @@
 # ( cd dropbear/ ; make distclean ; rm config.log config.status ) ; ( cd dropbear-2019.78 ; rm .hg* .tra* .git* ; find * -exec touch -r {} ../dropbear/{} \; )
 # diff -uN dropbear-2019.78/ dropbear/ | grep -v '^Binary files' > dropbear.patch
+diff -uN dropbear-2019.78/cli-main.c dropbear/cli-main.c
+--- dropbear-2019.78/cli-main.c	2020-03-16 22:40:38.531566735 -0400
++++ dropbear/cli-main.c	2021-05-25 00:35:08.404435950 -0400
+@@ -31,6 +31,7 @@
+ #include "dbrandom.h"
+ #include "crypto_desc.h"
+ #include "netio.h"
++#include "libdropbear.h"
+ 
+ static void cli_dropbear_exit(int exitcode, const char* format, va_list param) ATTRIB_NORETURN;
+ static void cli_dropbear_log(int priority, const char* format, va_list param);
+@@ -40,6 +41,10 @@
+ static void kill_proxy_sighandler(int signo);
+ #endif
+ 
++#ifdef ENABLE_LIBDROPBEAR
++struct dropbear_hooks hooks; /* GLOBAL */
++#endif
++
+ #if defined(DBMULTI_dbclient) || !DROPBEAR_MULTI
+ #if defined(DBMULTI_dbclient) && DROPBEAR_MULTI
+ int cli_main(int argc, char ** argv) {
 diff -uN dropbear-2019.78/common-channel.c dropbear/common-channel.c
 --- dropbear-2019.78/common-channel.c	2019-03-27 10:15:23.000000000 -0400
 +++ dropbear/common-channel.c	2019-03-27 10:15:23.000000000 -0400
@@ -199,7 +221,7 @@ diff -uN dropbear-2019.78/libdropbear.h dropbear/libdropbear.h
 +  int (*on_close_channel)(struct dropbear_chansess_accept *chansess);
 +};
 +
-+struct dropbear_hooks hooks; /* GLOBAL */
++extern struct dropbear_hooks hooks; /* GLOBAL */
 +
 +void dropbear_init();
 +void dropbear_init_argv(int argc, char ** argv);
@@ -508,7 +530,18 @@ diff -uN dropbear-2019.78/svr-main.c dropbear/svr-main.c
  
  static size_t listensockets(int *sock, size_t sockcount, int *maxfd);
  static void sigchld_handler(int dummy);
-@@ -174,6 +175,13 @@
+@@ -43,6 +44,10 @@
+ #endif
+ static void commonsetup(void);
+ 
++#ifdef ENABLE_LIBDROPBEAR
++struct dropbear_hooks hooks; /* GLOBAL */
++#endif
++
+ #if defined(DBMULTI_dropbear) || !DROPBEAR_MULTI
+ #if defined(DBMULTI_dropbear) && DROPBEAR_MULTI
+ int dropbear_main(int argc, char ** argv)
+@@ -174,6 +179,13 @@
  		fprintf(pidfile, "%d\n", getpid());
  		fclose(pidfile);
  	}
@@ -522,7 +555,7 @@ diff -uN dropbear-2019.78/svr-main.c dropbear/svr-main.c
  
  	/* incoming connection select loop */
  	for(;;) {
-@@ -338,6 +346,49 @@
+@@ -338,6 +350,49 @@
  }
  #endif /* NON_INETD_MODE */
  
