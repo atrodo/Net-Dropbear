@@ -11,7 +11,7 @@ This is a container package. You want one of the sub packages:
 
 # AUTHOR
 
-Jon Gentle &lt;atrodo@cpan.org>
+Jon Gentle <atrodo@cpan.org>
 
 # COPYRIGHT
 
