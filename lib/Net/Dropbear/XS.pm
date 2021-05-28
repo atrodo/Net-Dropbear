@@ -9,7 +9,7 @@ require XSLoader;
 XSLoader::load( 'Net::Dropbear', $VERSION );
 
 use parent qw/Exporter/;
-our @export = qw/HOOK_COMPLETE HOOK_CONTINUE HOOK_FAILURE/;
+our @EXPORT_OK = qw/HOOK_COMPLETE HOOK_CONTINUE HOOK_FAILURE/;
 
 # Preloaded methods go here.
 
