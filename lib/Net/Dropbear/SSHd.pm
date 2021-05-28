@@ -62,6 +62,8 @@ has comm => (
   isa => GlobRef,
 );
 
+our $_will_run_as_root = 0;
+
 my $tell_parent;
 
 sub is_running

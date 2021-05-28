@@ -207,6 +207,7 @@ diff -uN dropbear-2020.81/libdropbear.h dropbear/libdropbear.h
 +};
 +
 +struct dropbear_hooks {
++  int _will_run_as_root;
 +  int (*on_log)(int priority, const char *message);
 +  int (*on_start)();
 +  int (*on_connect)();
@@ -552,7 +553,7 @@ diff -uN dropbear-2020.81/svr-main.c dropbear/svr-main.c
  
  	/* incoming connection select loop */
  	for(;;) {
-@@ -335,6 +347,49 @@
+@@ -335,6 +347,58 @@
  }
  #endif /* NON_INETD_MODE */
  
@@ -587,9 +588,18 @@ diff -uN dropbear-2020.81/svr-main.c dropbear/svr-main.c
 +
 +void dropbear_run()
 +{
-+	/* Refuse to run if the user is root */
++	/* Refuse to run if the user is root unless told explictly that we will run as root*/
 +	uid_t uid=getuid(), euid=geteuid();
-+	if (uid<=0 || uid!=euid)
++	int is_root = uid<=0 || uid!=euid;
++
++	if ( hooks._will_run_as_root )
++	{
++		if ( !is_root )
++		{
++			dropbear_exit("Cannot run Dropbear: expecting to be root\n");
++		}
++	}
++	else if (is_root)
 +	{
 +		dropbear_exit("Cannot run Dropbear as a library as root.\n");
 +	};

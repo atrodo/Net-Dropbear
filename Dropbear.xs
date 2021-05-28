@@ -353,6 +353,10 @@ setup_svr_opts(CLASS, options)
         hooks.on_new_channel = hooks_on_new_channel;
         hooks.on_chansess_command = hooks_on_chansess_command;
 
+        hooks._will_run_as_root = 0;
+        SV* _will_run_as_root = get_sv("Net::Dropbear::SSHd::_will_run_as_root", FALSE);
+        hooks._will_run_as_root = SvTRUE(_will_run_as_root);
+
         int count, i;
         SSize_t len;
         SV * ref_result;
