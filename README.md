@@ -6,8 +6,8 @@ Net::Dropbear - Use Dropbear SSH inside of perl
 
 This is a container package. You want one of the sub packages:
 
-- [Net::Dropbear::SSHd](https://metacpan.org/pod/Net::Dropbear::SSHd) - Embed and control a Dropbear SSH server inside of perl
-- [Net::Dropbear::SSH](https://metacpan.org/pod/Net::Dropbear::SSH) - Embed and control a Dropbear SSH client inside of perl (Not implemented yet)
+- [Net::Dropbear::SSHd](https://metacpan.org/pod/Net%3A%3ADropbear%3A%3ASSHd) - Embed and control a Dropbear SSH server inside of perl
+- [Net::Dropbear::SSH](https://metacpan.org/pod/Net%3A%3ADropbear%3A%3ASSH) - Embed and control a Dropbear SSH client inside of perl (Not implemented yet)
 
 # AUTHOR
 
