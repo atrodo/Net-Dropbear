@@ -3,7 +3,7 @@ Revision history for Net-Dropbear
 {{$NEXT}}
 
 0.16  2022-07-07 23:15:57 EDT
-        * Update to Dropbear 2020.81
+        * Update to Dropbear 2022.82
 
 0.15  2022-07-01 00:46:49 EDT
         * Make sure that Dropbear.xs is also friendly to the -fno-common
