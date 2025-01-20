@@ -32,7 +32,7 @@ my %WriteMakefileArgs = (
   'VERSION' => '0.16',
 
   test => { TESTS => "t/*.t" },
-  INC => '-I. -Idropbear -Idropbear/libtomcrypt/src/headers',
+  INC => '-I. -Idropbear -Idropbear/src -Idropbear/libtomcrypt/src/headers',
   LDFROM => '$(OBJECT)' . " $objs",
   LIBS   => $libs,
 
@@ -109,7 +109,7 @@ sub build_dropbear
       if -f "$db_src/Makefile";
 
   run("cd $db_src && patch -N -i ../dropbear.patch")
-      if !-f "$db_src/libdropbear.h";
+      if !-f "$db_src/src/libdropbear.h";
 
   run("cd $db_src && ./configure");
   run("cd $db_src && make");

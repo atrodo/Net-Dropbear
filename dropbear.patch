@@ -1,8 +1,8 @@
-# ( cd dropbear/ ; make distclean ; rm config.log config.status ) ; ( cd dropbear-2020.81 ; rm .hg* .tra* .git* ; find * -exec touch -r {} ../dropbear/{} \; )
-# diff -uN dropbear-2020.81/ dropbear/ | grep -v '^Binary files' > dropbear.patch
-diff -uN dropbear-2022.82/cli-main.c dropbear/cli-main.c
---- dropbear-2022.82/cli-main.c	2022-04-01 10:30:00.000000000 -0400
-+++ dropbear/cli-main.c	2022-04-01 10:30:00.000000000 -0400
+# ( cd dropbear/ ; make distclean ; rm config.log config.status ) ; ( cd dropbear-2023.86 ; rm .hg* .tra* .git* ; find * -exec touch -r {} ../dropbear/{} \; )
+# diff -uN dropbear-2024.86/src/ dropbear/src/ | grep -v '^Binary files' > dropbear.patch ; diff -uN dropbear-2024.86/configure dropbear/configure >> dropbear.patch
+diff -uN dropbear-2024.86/src/cli-main.c dropbear/src/cli-main.c
+--- dropbear-2024.86/src/cli-main.c	2024-10-22 10:30:00.000000000 -0400
++++ dropbear/src/cli-main.c	2024-10-22 10:30:00.000000000 -0400
 @@ -32,12 +32,17 @@
  #include "crypto_desc.h"
  #include "netio.h"
@@ -21,9 +21,9 @@ diff -uN dropbear-2022.82/cli-main.c dropbear/cli-main.c
  #if defined(DBMULTI_dbclient) || !DROPBEAR_MULTI
  #if defined(DBMULTI_dbclient) && DROPBEAR_MULTI
  int cli_main(int argc, char ** argv) {
-diff -uN dropbear-2022.82/common-channel.c dropbear/common-channel.c
---- dropbear-2022.82/common-channel.c	2022-04-01 10:30:00.000000000 -0400
-+++ dropbear/common-channel.c	2022-04-01 10:30:00.000000000 -0400
+diff -uN dropbear-2024.86/src/common-channel.c dropbear/src/common-channel.c
+--- dropbear-2024.86/src/common-channel.c	2024-10-22 10:30:00.000000000 -0400
++++ dropbear/src/common-channel.c	2024-10-22 10:30:00.000000000 -0400
 @@ -35,6 +35,7 @@
  #include "listener.h"
  #include "runopts.h"
@@ -32,7 +32,7 @@ diff -uN dropbear-2022.82/common-channel.c dropbear/common-channel.c
  
  static void send_msg_channel_open_failure(unsigned int remotechan, int reason,
  		const char *text, const char *lang);
-@@ -941,6 +942,24 @@
+@@ -942,6 +943,24 @@
  		goto failure;
  	}
  
@@ -57,9 +57,9 @@ diff -uN dropbear-2022.82/common-channel.c dropbear/common-channel.c
  	if (channel->type->inithandler) {
  		ret = channel->type->inithandler(channel);
  		if (ret == SSH_OPEN_IN_PROGRESS) {
-diff -uN dropbear-2022.82/common-session.c dropbear/common-session.c
---- dropbear-2022.82/common-session.c	2022-04-01 10:30:00.000000000 -0400
-+++ dropbear/common-session.c	2022-04-01 10:30:00.000000000 -0400
+diff -uN dropbear-2024.86/src/common-session.c dropbear/src/common-session.c
+--- dropbear-2024.86/src/common-session.c	2024-10-22 10:30:00.000000000 -0400
++++ dropbear/src/common-session.c	2024-10-22 10:30:00.000000000 -0400
 @@ -35,6 +35,7 @@
  #include "channel.h"
  #include "runopts.h"
@@ -68,7 +68,7 @@ diff -uN dropbear-2022.82/common-session.c dropbear/common-session.c
  
  static void checktimeouts(void);
  static long select_timeout(void);
-@@ -627,6 +628,78 @@
+@@ -641,6 +642,78 @@
  	if (ses.authstate.pw_passwd)
  		m_free(ses.authstate.pw_passwd);
  
@@ -147,22 +147,9 @@ diff -uN dropbear-2022.82/common-session.c dropbear/common-session.c
  	pw = getpwnam(username);
  	if (!pw) {
  		return;
-diff -uN dropbear-2022.82/configure dropbear/configure
---- dropbear-2022.82/configure	2022-04-01 10:30:00.000000000 -0400
-+++ dropbear/configure	2022-04-01 10:30:00.000000000 -0400
-@@ -3279,7 +3279,7 @@
- 	{ $as_echo "$as_me:${as_lineno-$LINENO}: Checking for available hardened build flags:" >&5
- $as_echo "$as_me: Checking for available hardened build flags:" >&6;}
- 	# relocation flags don't make sense for static builds
--	if test "$STATIC" -ne 1; then
-+	if false; then
- 		# pie
- 		{
- 		OLDFLAGS="$CFLAGS"
-Common subdirectories: dropbear-2022.82/debian and dropbear/debian
-diff -uN dropbear-2022.82/dropbear.h dropbear/dropbear.h
---- dropbear-2022.82/dropbear.h	1969-12-31 19:00:00.000000000 -0500
-+++ dropbear/dropbear.h	2022-07-06 23:07:07.574753136 -0400
+diff -uN dropbear-2024.86/src/dropbear.h dropbear/src/dropbear.h
+--- dropbear-2024.86/src/dropbear.h	1969-12-31 19:00:00.000000000 -0500
++++ dropbear/src/dropbear.h	2025-01-20 00:25:40.547109447 -0500
 @@ -0,0 +1,16 @@
 +
 +#ifndef _DROPBEAR_H_
@@ -180,11 +167,9 @@ diff -uN dropbear-2022.82/dropbear.h dropbear/dropbear.h
 +static void main_noinetd(int argc, char ** argv, const char* multipath);
 +
 +#endif
-Common subdirectories: dropbear-2022.82/fuzz and dropbear/fuzz
-Common subdirectories: dropbear-2022.82/.github and dropbear/.github
-diff -uN dropbear-2022.82/libdropbear.h dropbear/libdropbear.h
---- dropbear-2022.82/libdropbear.h	1969-12-31 19:00:00.000000000 -0500
-+++ dropbear/libdropbear.h	2022-07-06 23:07:07.574753136 -0400
+diff -uN dropbear-2024.86/src/libdropbear.h dropbear/src/libdropbear.h
+--- dropbear-2024.86/src/libdropbear.h	1969-12-31 19:00:00.000000000 -0500
++++ dropbear/src/libdropbear.h	2025-01-20 00:25:40.547109447 -0500
 @@ -0,0 +1,51 @@
 +#ifndef _LIBDROPBEAR_H_
 +#define _LIBDROPBEAR_H_
@@ -237,11 +222,9 @@ diff -uN dropbear-2022.82/libdropbear.h dropbear/libdropbear.h
 +#define ENABLE_LIBDROPBEAR
 +
 +#endif /* _LIBDROPBEAR_H_ */
-Common subdirectories: dropbear-2022.82/libtomcrypt and dropbear/libtomcrypt
-Common subdirectories: dropbear-2022.82/libtommath and dropbear/libtommath
-diff -uN dropbear-2022.82/svr-authpasswd.c dropbear/svr-authpasswd.c
---- dropbear-2022.82/svr-authpasswd.c	2022-04-01 10:30:00.000000000 -0400
-+++ dropbear/svr-authpasswd.c	2022-04-01 10:30:00.000000000 -0400
+diff -uN dropbear-2024.86/src/svr-authpasswd.c dropbear/src/svr-authpasswd.c
+--- dropbear-2024.86/src/svr-authpasswd.c	2024-10-22 10:30:00.000000000 -0400
++++ dropbear/src/svr-authpasswd.c	2024-10-22 10:30:00.000000000 -0400
 @@ -30,6 +30,7 @@
  #include "dbutil.h"
  #include "auth.h"
@@ -282,18 +265,18 @@ diff -uN dropbear-2022.82/svr-authpasswd.c dropbear/svr-authpasswd.c
  	}
  	m_burn(password, passwordlen);
  	m_free(password);
-diff -uN dropbear-2022.82/svr-authpubkey.c dropbear/svr-authpubkey.c
---- dropbear-2022.82/svr-authpubkey.c	2022-04-01 10:30:00.000000000 -0400
-+++ dropbear/svr-authpubkey.c	2022-04-01 10:30:00.000000000 -0400
-@@ -64,6 +64,7 @@
- #include "ssh.h"
+diff -uN dropbear-2024.86/src/svr-authpubkey.c dropbear/src/svr-authpubkey.c
+--- dropbear-2024.86/src/svr-authpubkey.c	2024-10-22 10:30:00.000000000 -0400
++++ dropbear/src/svr-authpubkey.c	2024-10-22 10:30:00.000000000 -0400
+@@ -65,6 +65,7 @@
  #include "packet.h"
  #include "algo.h"
+ #include "runopts.h"
 +#include "libdropbear.h"
  
  #if DROPBEAR_SVR_PUBKEY_AUTH
  
-@@ -435,6 +436,44 @@
+@@ -458,6 +459,44 @@
  		dropbear_exit("Failed to set euid");
  	}
  #endif
@@ -338,7 +321,7 @@ diff -uN dropbear-2022.82/svr-authpubkey.c dropbear/svr-authpubkey.c
  	/* check file permissions, also whether file exists */
  	if (checkpubkeyperms() == DROPBEAR_FAILURE) {
  		TRACE(("bad authorized_keys permissions, or file doesn't exist"))
-@@ -465,6 +504,10 @@
+@@ -488,6 +527,10 @@
  	}
  	TRACE(("checkpubkey: opened authorized_keys OK"))
  
@@ -349,9 +332,9 @@ diff -uN dropbear-2022.82/svr-authpubkey.c dropbear/svr-authpubkey.c
  	line = buf_new(MAX_AUTHKEYS_LINE);
  	line_num = 0;
  
-diff -uN dropbear-2022.82/svr-chansession.c dropbear/svr-chansession.c
---- dropbear-2022.82/svr-chansession.c	2022-04-01 10:30:00.000000000 -0400
-+++ dropbear/svr-chansession.c	2022-04-01 10:30:00.000000000 -0400
+diff -uN dropbear-2024.86/src/svr-chansession.c dropbear/src/svr-chansession.c
+--- dropbear-2024.86/src/svr-chansession.c	2024-10-22 10:30:00.000000000 -0400
++++ dropbear/src/svr-chansession.c	2024-10-22 10:30:00.000000000 -0400
 @@ -37,6 +37,7 @@
  #include "agentfwd.h"
  #include "runopts.h"
@@ -377,7 +360,7 @@ diff -uN dropbear-2022.82/svr-chansession.c dropbear/svr-chansession.c
  	TRACE(("sesscheckclose, pid %d, exitpid %d", chansess->pid, chansess->exit.exitpid))
  
  	if (chansess->exit.exitpid != -1) {
-@@ -597,6 +608,13 @@
+@@ -594,6 +605,13 @@
  		return DROPBEAR_FAILURE;
  	}
  
@@ -391,7 +374,7 @@ diff -uN dropbear-2022.82/svr-chansession.c dropbear/svr-chansession.c
  	/* allocate the pty */
  	if (chansess->master != -1) {
  		dropbear_exit("Multiple pty requests");
-@@ -611,9 +629,6 @@
+@@ -608,9 +626,6 @@
  		dropbear_exit("Out of memory"); /* TODO disconnect */
  	}
  
@@ -401,7 +384,7 @@ diff -uN dropbear-2022.82/svr-chansession.c dropbear/svr-chansession.c
  	pty_setowner(pw, chansess->tty);
  
  	/* Set up the rows/col counts */
-@@ -698,7 +713,117 @@
+@@ -695,7 +710,117 @@
  			}
  		}
  	}
@@ -520,9 +503,9 @@ diff -uN dropbear-2022.82/svr-chansession.c dropbear/svr-chansession.c
  
  	/* take global command into account */
  	if (svr_opts.forced_command) {
-diff -uN dropbear-2022.82/svr-main.c dropbear/svr-main.c
---- dropbear-2022.82/svr-main.c	2022-04-01 10:30:00.000000000 -0400
-+++ dropbear/svr-main.c	2022-04-01 10:30:00.000000000 -0400
+diff -uN dropbear-2024.86/src/svr-main.c dropbear/src/svr-main.c
+--- dropbear-2024.86/src/svr-main.c	2024-10-22 10:30:00.000000000 -0400
++++ dropbear/src/svr-main.c	2024-10-22 10:30:00.000000000 -0400
 @@ -30,6 +30,7 @@
  #include "runopts.h"
  #include "dbrandom.h"
@@ -542,7 +525,7 @@ diff -uN dropbear-2022.82/svr-main.c dropbear/svr-main.c
  #if defined(DBMULTI_dropbear) || !DROPBEAR_MULTI
  #if defined(DBMULTI_dropbear) && DROPBEAR_MULTI
  int dropbear_main(int argc, char ** argv, const char* multipath)
-@@ -205,6 +210,13 @@
+@@ -203,6 +208,13 @@
  		fprintf(pidfile, "%d\n", getpid());
  		fclose(pidfile);
  	}
@@ -556,7 +539,7 @@ diff -uN dropbear-2022.82/svr-main.c dropbear/svr-main.c
  
  	/* incoming connection select loop */
  	for(;;) {
-@@ -399,6 +411,58 @@
+@@ -400,6 +412,58 @@
  }
  #endif /* NON_INETD_MODE */
  
@@ -615,9 +598,9 @@ diff -uN dropbear-2022.82/svr-main.c dropbear/svr-main.c
  
  /* catch + reap zombie children */
  static void sigchld_handler(int UNUSED(unused)) {
-diff -uN dropbear-2022.82/svr-runopts.c dropbear/svr-runopts.c
---- dropbear-2022.82/svr-runopts.c	2022-04-01 10:30:00.000000000 -0400
-+++ dropbear/svr-runopts.c	2022-04-01 10:30:00.000000000 -0400
+diff -uN dropbear-2024.86/src/svr-runopts.c dropbear/src/svr-runopts.c
+--- dropbear-2024.86/src/svr-runopts.c	2024-10-22 10:30:00.000000000 -0400
++++ dropbear/src/svr-runopts.c	2024-10-22 10:30:00.000000000 -0400
 @@ -29,6 +29,7 @@
  #include "dbutil.h"
  #include "algo.h"
@@ -626,7 +609,7 @@ diff -uN dropbear-2022.82/svr-runopts.c dropbear/svr-runopts.c
  
  #include <grp.h>
  
-@@ -580,6 +581,12 @@
+@@ -589,6 +590,12 @@
  		loadhostkey(hostkey_file, 1);
  		m_free(hostkey_file);
  	}
@@ -639,7 +622,7 @@ diff -uN dropbear-2022.82/svr-runopts.c dropbear/svr-runopts.c
  
  	/* Only load default host keys if a host key is not specified by the user */
  	if (svr_opts.num_hostkey_files == 0) {
-@@ -597,6 +604,11 @@
+@@ -606,6 +613,11 @@
  #if DROPBEAR_ED25519
  		loadhostkey(ED25519_PRIV_FILENAME, 0);
  #endif
@@ -651,9 +634,9 @@ diff -uN dropbear-2022.82/svr-runopts.c dropbear/svr-runopts.c
  	}
  
  #if DROPBEAR_RSA
-@@ -678,3 +690,17 @@
- 		dropbear_exit("No hostkeys available. 'dropbear -R' may be useful or run dropbearkey.");
- 	}
+@@ -718,3 +730,17 @@
+ 	buf_setpos(svr_opts.banner, 0);
+ 
  }
 +
 +#ifdef ENABLE_LIBDROPBEAR
@@ -669,9 +652,9 @@ diff -uN dropbear-2022.82/svr-runopts.c dropbear/svr-runopts.c
 +}
 +
 +#endif
-diff -uN dropbear-2022.82/svr-session.c dropbear/svr-session.c
---- dropbear-2022.82/svr-session.c	2022-04-01 10:30:00.000000000 -0400
-+++ dropbear/svr-session.c	2022-04-01 10:30:00.000000000 -0400
+diff -uN dropbear-2024.86/src/svr-session.c dropbear/src/svr-session.c
+--- dropbear-2024.86/src/svr-session.c	2024-10-22 10:30:00.000000000 -0400
++++ dropbear/src/svr-session.c	2024-10-22 10:30:00.000000000 -0400
 @@ -40,6 +40,7 @@
  #include "auth.h"
  #include "runopts.h"
@@ -680,7 +663,7 @@ diff -uN dropbear-2022.82/svr-session.c dropbear/svr-session.c
  #include "fuzz.h"
  
  static void svr_remoteclosed(void);
-@@ -321,6 +322,13 @@
+@@ -326,6 +327,13 @@
  	}
  #endif
  
@@ -694,4 +677,14 @@ diff -uN dropbear-2022.82/svr-session.c dropbear/svr-session.c
  	/* if we are using DEBUG_TRACE, we want to print to stderr even if
  	 * syslog is used, so it is included in error reports */
  #if DEBUG_TRACE
-Common subdirectories: dropbear-2022.82/test and dropbear/test
+--- dropbear-2024.86/configure	2024-10-22 10:30:00.000000000 -0400
++++ dropbear/configure	2024-10-22 10:30:00.000000000 -0400
+@@ -4139,7 +4139,7 @@
+ 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: Checking for available hardened build flags:" >&5
+ printf "%s\n" "$as_me: Checking for available hardened build flags:" >&6;}
+ 	# relocation flags don't make sense for static builds
+-	if test "$STATIC" -ne 1; then
++	if false; then
+ 		# pie
+ 		{
+ 		OLDFLAGS="$CFLAGS"
